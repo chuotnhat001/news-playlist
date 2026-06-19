@@ -1,0 +1,10 @@
+{
+  "yolo_mode": true,
+  "granularity": "medium",
+  "commit_planning_docs": true,
+  "use_subagents": true,
+  "created": "2026-06-20",
+  "project_type": "greenfield",
+  "framework": "flutter",
+  "language": "dart"
+}

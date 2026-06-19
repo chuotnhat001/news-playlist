@@ -1,0 +1,219 @@
+# News Playlist - Trợ lý nghe tin tức khi lái xe
+
+## Bối cảnh
+
+Hàng ngày tôi thường đọc tin tức từ một số trang báo điện tử như Dân Trí, Soha, VnExpress,...
+
+Nhiều trang báo hiện nay đã hỗ trợ tính năng Audio, cho phép người dùng nghe bài viết thay vì đọc.
+
+Tuy nhiên khi đang lái xe hoặc di chuyển, trải nghiệm hiện tại còn nhiều bất tiện:
+
+* Muốn nghe 10 bài báo phải mở từng bài.
+* Mỗi lần nghe xong một bài lại phải chọn bài tiếp theo.
+* Không thể thao tác liên tục khi đang lái xe.
+* Mất tập trung và không an toàn.
+
+Trong thực tế, thứ người dùng cần không phải là "nghe từng bài báo", mà là:
+
+> Nghe liên tục một chuỗi tin tức mình quan tâm chỉ với một lần bấm Play.
+
+---
+
+# Ý tưởng
+
+Xây dựng một ứng dụng mobile đóng vai trò là "News Playlist Player".
+
+Ứng dụng không tạo nội dung mới, không sản xuất audio mới, mà tận dụng các bài viết đã có sẵn audio trên một số trang báo được hỗ trợ.
+
+Người dùng chọn một chuyên mục hoặc chủ đề quan tâm.
+
+Ví dụ:
+
+* Công nghệ
+* Kinh doanh
+* Chứng khoán
+* AI
+* Startup
+* Thời sự
+
+Hệ thống sẽ tự động:
+
+1. Lấy các bài viết mới nhất từ nguồn báo đã cấu hình.
+2. Thu thập audio tương ứng của các bài viết đó.
+3. Tạo thành một playlist.
+4. Phát liên tục từ bài này sang bài khác.
+
+Người dùng chỉ cần:
+
+* Mở ứng dụng
+* Chọn playlist
+* Bấm Play
+
+Sau đó toàn bộ quá trình nghe diễn ra tự động.
+
+---
+
+# Trải nghiệm người dùng
+
+## Kịch bản 1: Nghe tin công nghệ buổi sáng
+
+Người dùng mở ứng dụng.
+
+Chọn:
+
+"Công nghệ hôm nay"
+
+Ứng dụng hiển thị:
+
+* Bài 1
+* Bài 2
+* Bài 3
+* ...
+* Bài 10
+
+Người dùng bấm Play.
+
+Ứng dụng phát:
+
+Bài 1
+↓
+Tự động chuyển
+↓
+Bài 2
+↓
+Tự động chuyển
+↓
+Bài 3
+↓
+...
+
+Cho đến hết playlist.
+
+---
+
+## Kịch bản 2: Nghe khi lái xe
+
+Trước khi lên xe:
+
+* Mở ứng dụng
+* Chọn playlist
+
+Khi bắt đầu di chuyển:
+
+* Không cần chạm điện thoại nữa.
+* Không cần tìm bài tiếp theo.
+* Không cần mở từng bài báo.
+
+Ứng dụng hoạt động tương tự Spotify hoặc Podcast.
+
+---
+
+# Giá trị cốt lõi
+
+## 1. Một lần bấm để nghe nhiều bài
+
+Thay vì:
+
+# 10 bài viết
+
+10 lần mở bài
++
+10 lần bấm Play
+
+Chỉ cần:
+
+1 lần Play.
+
+---
+
+## 2. Tập trung vào nghe
+
+Ứng dụng được thiết kế cho tình huống:
+
+* Lái xe
+* Đi bộ
+* Tập thể dục
+* Làm việc nhà
+
+Người dùng không cần nhìn màn hình.
+
+---
+
+## 3. Tự động hóa việc theo dõi tin tức
+
+Mỗi ngày ứng dụng tự xây dựng playlist mới dựa trên các bài mới nhất.
+
+Người dùng không cần tìm kiếm.
+
+---
+
+# Phạm vi MVP
+
+Phiên bản đầu tiên chỉ tập trung vào việc giải quyết pain point chính.
+
+### Hỗ trợ một số báo cố định
+
+Ví dụ:
+
+* Dân Trí
+* Soha
+
+### Hỗ trợ một số chuyên mục
+
+Ví dụ:
+
+* Công nghệ
+* Kinh doanh
+* Chứng khoán
+
+### Chức năng chính
+
+* Danh sách bài mới
+* Play All
+* Auto Next
+* Chạy nền
+* Điều khiển đơn giản
+
+Không cần:
+
+* AI
+* Tóm tắt nội dung
+* Chuyển văn bản thành giọng nói
+* Cá nhân hóa phức tạp
+
+---
+
+# Tầm nhìn dài hạn
+
+Sau khi MVP chứng minh được nhu cầu thực tế, sản phẩm có thể phát triển thành một nền tảng nghe tin tức cá nhân hóa.
+
+Ví dụ:
+
+"Morning Briefing"
+
+Mỗi sáng hệ thống tự tạo playlist:
+
+* 3 tin công nghệ
+* 3 tin kinh tế
+* 2 tin AI
+* 2 tin chứng khoán
+
+Người dùng chỉ cần:
+
+Play Morning Briefing
+
+và nghe toàn bộ bản tin trong lúc di chuyển.
+
+---
+
+# Mục tiêu cuối cùng
+
+Biến trải nghiệm đọc báo rời rạc thành trải nghiệm nghe liên tục.
+
+Từ:
+
+"Nghe từng bài báo"
+
+thành
+
+"Nghe một chương trình tin tức được tạo tự động theo nhu cầu cá nhân".
