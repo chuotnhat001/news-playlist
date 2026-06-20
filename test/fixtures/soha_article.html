@@ -5,9 +5,16 @@
   <time datetime="2024-11-01T10:00:00+07:00">01/11/2024 10:00</time>
   <div class="article-content">
     <p>Nội dung bài viết về AI.</p>
-    <audio>
-      <source src="https://media.soha.vn/audio/2024/11/01/article-audio.mp3" type="audio/mpeg">
-    </audio>
   </div>
+  <script>
+    var defined = window.defined || {};
+    embedTTS.init({
+      newsId: "198241101100000123",
+      distributionDate: "2024/11/01",
+      nameSpace: "sohanews",
+      ext: "m4a",
+      voices: ["nu", "nam", "nu-1", "nam-1"]
+    });
+  </script>
 </body>
 </html>

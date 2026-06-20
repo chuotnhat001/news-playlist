@@ -50,14 +50,18 @@ class AudioPlayerState {
 
 class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   final NewsAudioService _audioService;
+  final NewsAudioHandler? _audioHandler;
   StreamSubscription<PlaybackState>? _playbackSub;
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration?>? _durationSub;
+  StreamSubscription<dynamic>? _customEventSub;
 
-  AudioPlayerNotifier(this._audioService) : super(const AudioPlayerState()) {
+  AudioPlayerNotifier(this._audioService, [this._audioHandler])
+      : super(const AudioPlayerState()) {
     _playbackSub = _audioService.playbackStateStream.listen(_onPlaybackState);
     _positionSub = _audioService.positionStream.listen(_onPosition);
     _durationSub = _audioService.durationStream.listen(_onDuration);
+    _customEventSub = _audioHandler?.customEvent.listen(_onCustomEvent);
   }
 
   void _onPlaybackState(PlaybackState playbackState) {
@@ -90,6 +94,14 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   void _onDuration(Duration? duration) {
     if (duration != null) {
       state = state.copyWith(duration: duration);
+    }
+  }
+
+  void _onCustomEvent(dynamic event) {
+    if (event == 'skipNext') {
+      skipNext();
+    } else if (event == 'skipPrevious') {
+      skipPrevious();
     }
   }
 
@@ -164,7 +176,15 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   Future<void> _playCurrentTrack() async {
     final article = state.currentArticle;
     if (article == null) return;
-    await _audioService.playUrl(article.audioUrl);
+    _audioHandler?.setCurrentMediaItem(
+      title: article.title,
+      artist: article.source,
+    );
+    await _audioService.playUrl(
+      article.audioUrl,
+      title: article.title,
+      artist: article.source,
+    );
   }
 
   @override
@@ -172,7 +192,9 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     _playbackSub?.cancel();
     _positionSub?.cancel();
     _durationSub?.cancel();
+    _customEventSub?.cancel();
     _audioService.dispose();
+    _audioHandler?.dispose();
     super.dispose();
   }
 }
@@ -183,7 +205,14 @@ final newsAudioServiceProvider = Provider<NewsAudioService>((ref) {
   return service;
 });
 
+final audioHandlerProvider = Provider<NewsAudioHandler?>((ref) {
+  return null;
+});
+
 final audioPlayerProvider =
     StateNotifierProvider<AudioPlayerNotifier, AudioPlayerState>((ref) {
-  return AudioPlayerNotifier(ref.read(newsAudioServiceProvider));
+  return AudioPlayerNotifier(
+    ref.read(newsAudioServiceProvider),
+    ref.read(audioHandlerProvider),
+  );
 });

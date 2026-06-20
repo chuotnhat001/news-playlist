@@ -124,7 +124,7 @@ void main() {
       }
     });
 
-    test('parseArticlePage extracts title and audioUrl', () {
+    test('parseArticlePage extracts title and audioUrl from embedTTS', () {
       final article = crawler.parseArticlePage(
         sohaArticleHtml,
         'https://soha.vn/test-article-123456789.htm',
@@ -138,7 +138,7 @@ void main() {
       );
       expect(
         article.audioUrl,
-        'https://media.soha.vn/audio/2024/11/01/article-audio.mp3',
+        'https://tts.mediacdn.vn/2024/11/01/sohanews-nu-198241101100000123.m4a',
       );
       expect(article.source, 'soha');
       expect(article.category, 'cong-nghe');

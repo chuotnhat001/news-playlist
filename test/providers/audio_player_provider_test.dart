@@ -31,7 +31,7 @@ class MockNewsAudioService implements NewsAudioService {
   Stream<Duration?> get durationStream => durationController.stream;
 
   @override
-  Future<void> playUrl(String url) async {
+  Future<void> playUrl(String url, {String? title, String? artist}) async {
     lastPlayedUrl = url;
     playbackStateController.add(PlaybackState.playing);
   }
