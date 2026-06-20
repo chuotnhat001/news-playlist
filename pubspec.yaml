@@ -1,8 +1,6 @@
 name: news_playlist
-description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+description: "Listen to Vietnamese news as playlists while driving."
+publish_to: 'none'
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -48,6 +46,8 @@ dev_dependencies:
   mockito: ^5.4.0
   build_runner: ^2.4.0
   sqflite_common_ffi: ^2.3.0+1
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -1,0 +1,4 @@
+# Shorebird configuration
+# Run `shorebird init` to complete setup with your account
+app_id: # Set after running shorebird init
+auto_update: true

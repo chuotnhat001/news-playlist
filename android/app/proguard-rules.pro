@@ -1,0 +1,16 @@
+# Flutter-specific ProGuard rules
+
+# Keep Flutter classes
+-keep class io.flutter.app.** { *; }
+-keep class io.flutter.plugin.** { *; }
+-keep class io.flutter.util.** { *; }
+-keep class io.flutter.view.** { *; }
+-keep class io.flutter.** { *; }
+-keep class io.flutter.plugins.** { *; }
+
+# just_audio
+-keep class com.google.android.exoplayer2.** { *; }
+
+# dio
+-keep class okhttp3.** { *; }
+-keep class okio.** { *; }

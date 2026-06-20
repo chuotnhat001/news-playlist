@@ -1,0 +1,4 @@
+storePassword=KEYSTORE_PASSWORD
+keyPassword=KEY_PASSWORD
+keyAlias=news-playlist
+storeFile=../keystore/news-playlist.jks
