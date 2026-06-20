@@ -54,8 +54,11 @@ class _NewsPlaylistAppState extends ConsumerState<NewsPlaylistApp> {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
+      builder: (context, child) {
+        return AppShell(child: child ?? const SizedBox.shrink());
+      },
       home: _initialized
-          ? const AppShell(child: HomeScreen())
+          ? const HomeScreen()
           : const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             ),

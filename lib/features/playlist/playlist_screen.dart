@@ -55,7 +55,14 @@ class PlaylistScreen extends ConsumerWidget {
             child: ListView.builder(
               itemCount: articles.length,
               itemBuilder: (context, index) {
-                return ArticleTile(article: articles[index]);
+                return ArticleTile(
+                  article: articles[index],
+                  onTap: () {
+                    ref
+                        .read(audioPlayerProvider.notifier)
+                        .playFromIndex(articles, index);
+                  },
+                );
               },
             ),
           );

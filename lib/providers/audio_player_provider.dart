@@ -122,6 +122,17 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     await _playCurrentTrack();
   }
 
+  Future<void> playFromIndex(List<Article> articles, int index) async {
+    if (articles.isEmpty || index < 0 || index >= articles.length) return;
+    state = state.copyWith(
+      playlist: articles,
+      currentIndex: index,
+      position: Duration.zero,
+      duration: Duration.zero,
+    );
+    await _playCurrentTrack();
+  }
+
   Future<void> play() async {
     await _playCurrentTrack();
   }
