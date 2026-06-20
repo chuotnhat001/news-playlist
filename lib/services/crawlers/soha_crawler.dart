@@ -7,10 +7,6 @@ import 'package:news_playlist/services/crawler_service.dart';
 
 /// Crawler for soha.vn articles with audio.
 class SohaCrawler implements SourceCrawler {
-  static const categoryUrls = {
-    'cong-nghe': 'https://soha.vn/cong-nghe.htm',
-    'kinh-doanh': 'https://soha.vn/kinh-doanh.htm',
-  };
 
   @override
   List<String> parseListingPage(String html) {

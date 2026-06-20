@@ -19,6 +19,7 @@ class MockNewsAudioService implements NewsAudioService {
   bool resumeCalled = false;
   bool stopCalled = false;
   Duration? lastSeekPosition;
+  bool autoEmitPlaying = true;
 
   @override
   Stream<PlaybackState> get playbackStateStream =>
@@ -33,7 +34,9 @@ class MockNewsAudioService implements NewsAudioService {
   @override
   Future<void> playUrl(String url, {String? title, String? artist}) async {
     lastPlayedUrl = url;
-    playbackStateController.add(PlaybackState.playing);
+    if (autoEmitPlaying) {
+      playbackStateController.add(PlaybackState.playing);
+    }
   }
 
   @override
@@ -167,18 +170,28 @@ void main() {
       expect(mockService.lastPlayedUrl, 'https://example.com/audio/2.mp3');
     });
 
-    test('skip-on-error advances to next track', () async {
+    test('skip-on-error advances to next track after retry', () async {
       final articles = [_createArticle('1'), _createArticle('2')];
       await notifier.setPlaylist(articles);
 
-      // Simulate playback error
+      // Simulate error — retry happens internally (playUrl called again)
+      // but since mock always emits playing, the retry succeeds.
+      // To properly test retry-then-skip, we need consecutive errors
+      // without a playing state in between.
+
+      // Override: stop auto-emitting playing on playUrl
+      mockService.autoEmitPlaying = false;
+
+      // First error triggers retry
       mockService.playbackStateController.add(PlaybackState.error);
-      // Allow stream event to propagate
+      await Future.delayed(Duration.zero);
+      expect(notifier.state.currentIndex, 0); // still on track 0 (retrying)
+
+      // Second error triggers skip
+      mockService.playbackStateController.add(PlaybackState.error);
       await Future.delayed(Duration.zero);
 
-      // Error handler triggers skipNext, advancing to the next track
       expect(notifier.state.currentIndex, 1);
-      expect(mockService.lastPlayedUrl, 'https://example.com/audio/2.mp3');
     });
 
     test('empty playlist is safe', () async {

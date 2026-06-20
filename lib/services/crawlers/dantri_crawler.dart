@@ -7,10 +7,6 @@ import 'package:news_playlist/services/crawler_service.dart';
 
 /// Crawler for dantri.com.vn articles with audio.
 class DantriCrawler implements SourceCrawler {
-  static const categoryUrls = {
-    'cong-nghe': 'https://dantri.com.vn/suc-manh-so.htm',
-    'kinh-doanh': 'https://dantri.com.vn/kinh-doanh.htm',
-  };
 
   @override
   List<String> parseListingPage(String html) {

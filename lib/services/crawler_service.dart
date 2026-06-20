@@ -1,18 +1,15 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:news_playlist/models/article.dart';
+import 'package:news_playlist/services/crawlers/dantri_crawler.dart';
+import 'package:news_playlist/services/crawlers/soha_crawler.dart';
 
-/// Abstract interface for source-specific HTML parsers.
 abstract class SourceCrawler {
-  /// Parse a listing page HTML and return article URLs found.
   List<String> parseListingPage(String html);
-
-  /// Parse an article page HTML and return an Article, or null if
-  /// the article doesn't have audio content.
   Article? parseArticlePage(String html, String articleUrl, String category);
 }
 
-/// Result of a crawl operation containing articles and any errors.
 class CrawlResult {
   final List<Article> articles;
   final List<String> errors;
@@ -23,15 +20,12 @@ class CrawlResult {
   int get successCount => articles.length;
 }
 
-/// Service that orchestrates crawling using a SourceCrawler and Dio.
 class CrawlerService {
   final SourceCrawler crawler;
   final Dio dio;
 
   CrawlerService({required this.crawler, required this.dio});
 
-  /// Crawl a category listing page and fetch individual articles.
-  /// Returns a CrawlResult with successfully parsed articles and errors.
   Future<CrawlResult> crawlCategory(
     String listingUrl,
     String category,
@@ -39,7 +33,6 @@ class CrawlerService {
     final articles = <Article>[];
     final errors = <String>[];
 
-    // Fetch listing page
     final String listingHtml;
     try {
       final response = await dio.get<String>(listingUrl);
@@ -51,17 +44,29 @@ class CrawlerService {
       );
     }
 
-    // Parse article URLs from listing
-    final articleUrls = crawler.parseListingPage(listingHtml);
+    // Parse listing in isolate to avoid jank
+    final crawlerType = crawler.runtimeType.toString();
+    final articleUrls = await compute(
+      _parseListingIsolate,
+      _ListingPayload(html: listingHtml, crawlerType: crawlerType),
+    );
     final urlsToFetch = articleUrls.take(10).toList();
 
-    // Fetch each article with delay
     for (final url in urlsToFetch) {
       try {
         await Future.delayed(const Duration(milliseconds: 500));
         final response = await dio.get<String>(url);
         final html = response.data ?? '';
-        final article = crawler.parseArticlePage(html, url, category);
+        // Parse each article in isolate
+        final article = await compute(
+          _parseArticleIsolate,
+          _ArticlePayload(
+            html: html,
+            articleUrl: url,
+            category: category,
+            crawlerType: crawlerType,
+          ),
+        );
         if (article != null) {
           articles.add(article);
         }
@@ -71,5 +76,46 @@ class CrawlerService {
     }
 
     return CrawlResult(articles: articles, errors: errors);
+  }
+}
+
+class _ListingPayload {
+  final String html;
+  final String crawlerType;
+  _ListingPayload({required this.html, required this.crawlerType});
+}
+
+class _ArticlePayload {
+  final String html;
+  final String articleUrl;
+  final String category;
+  final String crawlerType;
+  _ArticlePayload({
+    required this.html,
+    required this.articleUrl,
+    required this.category,
+    required this.crawlerType,
+  });
+}
+
+// Top-level functions for compute() — these run in a separate isolate
+List<String> _parseListingIsolate(_ListingPayload payload) {
+  final crawler = _createCrawler(payload.crawlerType);
+  return crawler.parseListingPage(payload.html);
+}
+
+Article? _parseArticleIsolate(_ArticlePayload payload) {
+  final crawler = _createCrawler(payload.crawlerType);
+  return crawler.parseArticlePage(payload.html, payload.articleUrl, payload.category);
+}
+
+SourceCrawler _createCrawler(String type) {
+  switch (type) {
+    case 'DantriCrawler':
+      return DantriCrawler();
+    case 'SohaCrawler':
+      return SohaCrawler();
+    default:
+      throw StateError('Unknown crawler type: $type');
   }
 }

@@ -55,6 +55,8 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration?>? _durationSub;
   StreamSubscription<dynamic>? _customEventSub;
+  int _retryCount = 0;
+  static const _maxRetries = 1;
 
   AudioPlayerNotifier(this._audioService, [this._audioHandler])
       : super(const AudioPlayerState()) {
@@ -67,6 +69,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   void _onPlaybackState(PlaybackState playbackState) {
     switch (playbackState) {
       case PlaybackState.playing:
+        _retryCount = 0;
         state = state.copyWith(isPlaying: true, isLoading: false);
         break;
       case PlaybackState.paused:
@@ -165,12 +168,19 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   }
 
   void _onTrackComplete() {
+    _retryCount = 0;
     skipNext();
   }
 
   void _onPlaybackError() {
-    state = state.copyWith(error: 'Playback error on current track');
-    skipNext();
+    if (_retryCount < _maxRetries) {
+      _retryCount++;
+      _playCurrentTrack();
+    } else {
+      _retryCount = 0;
+      state = state.copyWith(error: 'Playback error on current track');
+      skipNext();
+    }
   }
 
   Future<void> _playCurrentTrack() async {

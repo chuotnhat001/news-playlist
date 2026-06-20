@@ -10,7 +10,13 @@ import 'package:news_playlist/services/crawlers/soha_crawler.dart';
 
 final contentServiceProvider = Provider<ContentService>((ref) {
   final cacheService = CacheService();
-  final dio = Dio();
+  final dio = Dio(BaseOptions(
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 60),
+    headers: {
+      'User-Agent': 'NewsPlaylist/1.0',
+    },
+  ));
 
   final crawlerServices = <String, CrawlerService>{
     'dantri': CrawlerService(crawler: DantriCrawler(), dio: dio),

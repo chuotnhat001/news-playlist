@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:news_playlist/features/playlist/widgets/article_tile.dart';
 import 'package:news_playlist/providers/audio_player_provider.dart';
 import 'package:news_playlist/providers/content_provider.dart';
+import 'package:news_playlist/services/analytics_service.dart';
 import 'package:news_playlist/shared/widgets/empty_state.dart';
 import 'package:news_playlist/shared/widgets/error_toast.dart';
 
@@ -64,6 +65,7 @@ class PlaylistScreen extends ConsumerWidget {
         data: (articles) => articles.isNotEmpty
             ? FloatingActionButton.extended(
                 onPressed: () {
+                  AnalyticsService().logPlayAll(category, articles.length);
                   ref
                       .read(audioPlayerProvider.notifier)
                       .setPlaylist(articles);
