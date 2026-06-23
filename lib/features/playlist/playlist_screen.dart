@@ -10,12 +10,16 @@ import 'package:news_playlist/shared/widgets/error_toast.dart';
 
 class PlaylistScreen extends ConsumerWidget {
   final String category;
+  final String? categoryUrl;
 
-  const PlaylistScreen({super.key, required this.category});
+  const PlaylistScreen({super.key, required this.category, this.categoryUrl});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final articlesAsync = ref.watch(articlesProvider(category));
+    final provider = categoryUrl != null
+        ? articlesFromUrlProvider((url: categoryUrl!, categoryId: category))
+        : articlesProvider(category);
+    final articlesAsync = ref.watch(provider);
 
     return Scaffold(
       appBar: AppBar(
@@ -25,30 +29,34 @@ class PlaylistScreen extends ConsumerWidget {
         loading: () => _buildLoadingState(),
         error: (error, _) => EmptyState(
           icon: Icons.error_outline,
-          title: 'Failed to load articles',
+          title: 'Không tải được bài viết',
           subtitle: error.toString(),
-          actionLabel: 'Retry',
-          onAction: () => ref.invalidate(articlesProvider(category)),
+          actionLabel: 'Thử lại',
+          onAction: () => ref.invalidate(provider),
         ),
         data: (articles) {
           if (articles.isEmpty) {
             return EmptyState(
               icon: Icons.article_outlined,
-              title: 'No articles found',
-              subtitle: 'Pull down to refresh',
-              actionLabel: 'Refresh',
-              onAction: () => ref.invalidate(articlesProvider(category)),
+              title: 'Không tìm thấy bài viết',
+              subtitle: 'Kéo xuống để tải lại',
+              actionLabel: 'Tải lại',
+              onAction: () => ref.invalidate(provider),
             );
           }
           return RefreshIndicator(
             onRefresh: () async {
               final contentService = ref.read(contentServiceProvider);
               try {
-                await contentService.refreshCategory(category);
-                ref.invalidate(articlesProvider(category));
+                if (categoryUrl != null) {
+                  await contentService.refreshUrl(categoryUrl!, category);
+                } else {
+                  await contentService.refreshCategory(category);
+                }
+                ref.invalidate(provider);
               } catch (e) {
                 if (context.mounted) {
-                  showErrorToast(context, 'Refresh failed: $e');
+                  showErrorToast(context, 'Tải lại thất bại: $e');
                 }
               }
             },
@@ -78,7 +86,7 @@ class PlaylistScreen extends ConsumerWidget {
                       .setPlaylist(articles);
                 },
                 icon: const Icon(Icons.play_arrow),
-                label: const Text('Play All'),
+                label: const Text('Phát tất cả'),
               )
             : null,
       ),

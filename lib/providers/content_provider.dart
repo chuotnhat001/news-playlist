@@ -8,8 +8,12 @@ import 'package:news_playlist/services/crawler_service.dart';
 import 'package:news_playlist/services/crawlers/dantri_crawler.dart';
 import 'package:news_playlist/services/crawlers/soha_crawler.dart';
 
+final cacheServiceProvider = Provider<CacheService>((ref) {
+  return CacheService();
+});
+
 final contentServiceProvider = Provider<ContentService>((ref) {
-  final cacheService = CacheService();
+  final cacheService = ref.read(cacheServiceProvider);
   final dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 60),
@@ -23,10 +27,12 @@ final contentServiceProvider = Provider<ContentService>((ref) {
     'soha': CrawlerService(crawler: SohaCrawler(), dio: dio),
   };
 
-  return ContentService(
+  final service = ContentService(
     cacheService: cacheService,
     crawlerServices: crawlerServices,
   );
+  ref.onDispose(() => service.dispose());
+  return service;
 });
 
 final categoriesProvider = Provider<List<String>>((ref) {
@@ -36,5 +42,25 @@ final categoriesProvider = Provider<List<String>>((ref) {
 final articlesProvider =
     FutureProvider.family<List<Article>, String>((ref, category) async {
   final contentService = ref.read(contentServiceProvider);
+
+  // Auto-refresh when background crawl completes for this category
+  final sub = contentService.onBackgroundRefresh
+      .where((id) => id == category)
+      .listen((_) => ref.invalidateSelf());
+  ref.onDispose(() => sub.cancel());
+
   return contentService.getArticles(category);
+});
+
+final articlesFromUrlProvider = FutureProvider.family<List<Article>,
+    ({String url, String categoryId})>((ref, params) async {
+  final contentService = ref.read(contentServiceProvider);
+
+  // Auto-refresh when background crawl completes for this category
+  final sub = contentService.onBackgroundRefresh
+      .where((id) => id == params.categoryId)
+      .listen((_) => ref.invalidateSelf());
+  ref.onDispose(() => sub.cancel());
+
+  return contentService.getArticlesFromUrl(params.url, params.categoryId);
 });

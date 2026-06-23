@@ -49,7 +49,7 @@ void main() {
 
       expect(find.text('Mock Article One'), findsOneWidget);
       expect(find.text('Mock Article Two'), findsOneWidget);
-      expect(find.text('Play All'), findsOneWidget);
+      expect(find.text('Phát tất cả'), findsOneWidget);
     });
 
     testWidgets('shows empty state when no articles', (tester) async {
@@ -68,8 +68,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('No articles found'), findsOneWidget);
-      expect(find.text('Pull down to refresh'), findsOneWidget);
+      expect(find.text('Không tìm thấy bài viết'), findsOneWidget);
+      expect(find.text('Kéo xuống để tải lại'), findsOneWidget);
     });
 
     testWidgets('shows error state on failure', (tester) async {
@@ -88,8 +88,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Failed to load articles'), findsOneWidget);
-      expect(find.text('Retry'), findsOneWidget);
+      expect(find.text('Không tải được bài viết'), findsOneWidget);
+      expect(find.text('Thử lại'), findsOneWidget);
     });
   });
 }

@@ -15,19 +15,22 @@ class ProgressBar extends ConsumerWidget {
 
     return Column(
       children: [
-        Slider(
-          value: maxMillis > 0
-              ? position.inMilliseconds.toDouble().clamp(0, maxMillis)
-              : 0,
-          max: maxMillis > 0 ? maxMillis : 1,
-          onChanged: maxMillis > 0
-              ? (value) {
-                  ref
-                      .read(audioPlayerProvider.notifier)
-                      .seekTo(Duration(milliseconds: value.toInt()));
-                }
-              : null,
-        ),
+        if (state.isLoading)
+          const LinearProgressIndicator(minHeight: 4)
+        else
+          Slider(
+            value: maxMillis > 0
+                ? position.inMilliseconds.toDouble().clamp(0, maxMillis)
+                : 0,
+            max: maxMillis > 0 ? maxMillis : 1,
+            onChanged: maxMillis > 0
+                ? (value) {
+                    ref
+                        .read(audioPlayerProvider.notifier)
+                        .seekTo(Duration(milliseconds: value.toInt()));
+                  }
+                : null,
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Row(

@@ -1,42 +1,243 @@
 import 'package:flutter/material.dart';
 
-class CategoryCard extends StatelessWidget {
+class CategoryCard extends StatefulWidget {
   final String category;
   final VoidCallback onTap;
+  final VoidCallback? onReload;
+  final VoidCallback? onDelete;
+  final int? articleCount;
+  final bool isLoading;
 
   const CategoryCard({
     super.key,
     required this.category,
     required this.onTap,
+    this.onReload,
+    this.onDelete,
+    this.articleCount,
+    this.isLoading = false,
   });
 
   @override
+  State<CategoryCard> createState() => _CategoryCardState();
+}
+
+class _CategoryCardState extends State<CategoryCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  bool _actionsVisible = false;
+
+  static const _actionsWidth = 120.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    final delta = details.primaryDelta ?? 0;
+    _controller.value -= delta / _actionsWidth;
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    if (_controller.value > 0.4) {
+      _controller.forward();
+      setState(() => _actionsVisible = true);
+    } else {
+      _controller.reverse();
+      setState(() => _actionsVisible = false);
+    }
+  }
+
+  void _closeActions() {
+    _controller.reverse();
+    setState(() => _actionsVisible = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 1,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                _iconForCategory(category),
-                size: 40,
-                color: Theme.of(context).colorScheme.primary,
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      height: 76,
+      child: ClipRect(
+        child: Stack(
+          children: [
+            // Action buttons behind the card
+            Positioned(
+              top: 0,
+              bottom: 0,
+              right: 0,
+              width: _actionsWidth,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Material(
+                      color: Colors.blue,
+                      child: InkWell(
+                        onTap: () {
+                          _closeActions();
+                          widget.onReload?.call();
+                        },
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.refresh, color: Colors.white, size: 22),
+                            SizedBox(height: 2),
+                            Text('Reload',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Material(
+                      color: colorScheme.error,
+                      child: InkWell(
+                        onTap: () {
+                          _closeActions();
+                          widget.onDelete?.call();
+                        },
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.delete_outline,
+                                color: Colors.white, size: 22),
+                            SizedBox(height: 2),
+                            Text('Xóa',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                _formatCategory(category),
-                style: Theme.of(context).textTheme.titleSmall,
-                textAlign: TextAlign.center,
+            ),
+
+            // Foreground card that slides left
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(-_actionsWidth * _controller.value, 0),
+                  child: child,
+                );
+              },
+              child: Semantics(
+                label: 'Danh mục ${_formatCategory(widget.category)}',
+                child: GestureDetector(
+                onHorizontalDragUpdate: _handleDragUpdate,
+                onHorizontalDragEnd: _handleDragEnd,
+                onTap: () {
+                  if (_actionsVisible) {
+                    _closeActions();
+                  } else {
+                    widget.onTap();
+                  }
+                },
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: Container(
+                    margin: EdgeInsets.zero,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: const Color(0xFF00DCFF).withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _iconForCategory(widget.category),
+                            size: 32,
+                            color: const Color(0xFF00DCFF),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _formatCategory(widget.category),
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        color: Colors.white,
+                                      ),
+                                ),
+                                const SizedBox(height: 2),
+                                _buildSubtitle(context),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSubtitle(BuildContext context) {
+    if (widget.isLoading) {
+      return Row(
+        children: [
+          const SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: Color(0xFF00DCFF),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Đang tải...',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
+          ),
+        ],
+      );
+    }
+
+    final count = widget.articleCount;
+    final text = count != null ? '$count bài viết' : 'Chưa tải';
+    final color = count != null && count > 0
+        ? Colors.white.withValues(alpha: 0.6)
+        : Colors.white.withValues(alpha: 0.3);
+
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
     );
   }
 

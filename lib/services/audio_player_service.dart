@@ -46,8 +46,11 @@ class JustAudioNewsService implements NewsAudioService {
     try {
       await _player.setUrl(url);
       await _player.play();
-    } catch (_) {
-      // Error state will be emitted through playerStateStream
+    } catch (e) {
+      // Emit error through playerStateStream indirectly — just_audio handles this
+      // via ProcessingState, but setUrl failures throw before the stream updates.
+      // Re-throw so callers can handle.
+      rethrow;
     }
   }
 

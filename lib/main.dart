@@ -13,15 +13,13 @@ void main() async {
   final audioService = JustAudioNewsService();
   final audioHandler = await initAudioHandler(audioService);
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        newsAudioServiceProvider.overrideWithValue(audioService),
-        audioHandlerProvider.overrideWithValue(audioHandler),
-      ],
-      child: const NewsPlaylistApp(),
-    ),
-  );
+  runApp(ProviderScope(
+    overrides: [
+      newsAudioServiceProvider.overrideWithValue(audioService),
+      audioHandlerProvider.overrideWithValue(audioHandler),
+    ],
+    child: const NewsPlaylistApp(),
+  ));
 }
 
 class NewsPlaylistApp extends ConsumerStatefulWidget {
@@ -31,19 +29,41 @@ class NewsPlaylistApp extends ConsumerStatefulWidget {
   ConsumerState<NewsPlaylistApp> createState() => _NewsPlaylistAppState();
 }
 
-class _NewsPlaylistAppState extends ConsumerState<NewsPlaylistApp> {
+class _NewsPlaylistAppState extends ConsumerState<NewsPlaylistApp>
+    with WidgetsBindingObserver {
   bool _initialized = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initServices();
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      ref.read(audioPlayerProvider.notifier).saveState();
+    }
+  }
+
   Future<void> _initServices() async {
-    final contentService = ref.read(contentServiceProvider);
-    await contentService.init();
-    setState(() => _initialized = true);
+    try {
+      final contentService = ref.read(contentServiceProvider);
+      await contentService.init();
+      if (mounted) setState(() => _initialized = true);
+    } catch (e) {
+      debugPrint('[Init] Error: $e');
+      if (mounted) setState(() => _error = e.toString());
+    }
   }
 
   @override
@@ -57,11 +77,38 @@ class _NewsPlaylistAppState extends ConsumerState<NewsPlaylistApp> {
       builder: (context, child) {
         return AppShell(child: child ?? const SizedBox.shrink());
       },
-      home: _initialized
-          ? const HomeScreen()
-          : const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
+      home: _buildHome(),
     );
+  }
+
+  Widget _buildHome() {
+    if (_error != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48),
+              const SizedBox(height: 16),
+              Text('Init error: $_error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() { _error = null; });
+                  _initServices();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (!_initialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    return const HomeScreen();
   }
 }
