@@ -11,6 +11,7 @@ READY_TO_START
 - Phase 1: Project Foundation (2026-06-20)
 - Phase 2: UI & User Experience (2026-06-20)
 - Phase 3: Polish & Ship (2026-06-20)
+- Eng Review Implementation (2026-06-23)
 
 ## Post-Phase Fixes Applied
 - Fix critical initialization: ensureInitialized, ContentService.init, AudioHandler wiring
@@ -21,7 +22,27 @@ READY_TO_START
 - Dio timeout (30s connect, 60s receive)
 - AppShell: MaterialApp.builder for persistent MiniPlayer across all routes
 - ArticleTile onTap → playFromIndex()
-- Widget tests expanded: 55 → 65 tests
+- Widget tests expanded: 55 → 65 → 109 tests
+
+## Eng Review Tasks (2026-06-23)
+- [x] AudioHandler wiring — lock screen controls now functional
+- [x] Resume Session — SQLite persistence, "Tiep tuc nghe" card on Home
+- [x] Stale-while-revalidate — cached data shown instantly, background crawl
+- [x] Init guard — CacheService double-init protection
+- [x] Buffering indicator — spinner on play button, indeterminate progress bar
+- [x] Touch targets 56dp+ — all interactive elements meet driving threshold
+- [x] DRY ContentService — _fetchWithFallback extracted
+- [x] Semantics labels — tooltips + Semantics wrappers on key widgets
+- [x] DESIGN.md — design tokens documented
+- [x] Test gaps — categories CRUD, playback state, buffering UI, settings screen, audio lifecycle
+
+## Review Fixes (2026-06-23)
+- [x] P0: seekWhenReady — wait for audio source ready before seeking on resume
+- [x] P0: Double-tap prevention — clear state immediately on resume tap
+- [x] P1: Error state preservation — copyWith preserves error across updates
+- [x] P1: playUrl error propagation — rethrow + catch in _playCurrentTrack
+- [x] P2: Timer churn — skip schedule if timer already active
+- [x] P3: StreamController dispose — ContentService.dispose() + ref.onDispose
 
 ## Decisions Log
 | Date | Decision | Context |
@@ -37,11 +58,15 @@ READY_TO_START
 | 2026-06-20 | GitHub Actions for CI/CD | Standard, free for public repos |
 | 2026-06-20 | ProGuard + minify for release APK | Smaller APK, obfuscated code |
 | 2026-06-20 | MaterialApp.builder for AppShell | MiniPlayer persists across all routes |
+| 2026-06-23 | Stale-while-revalidate + StreamController notify | Show cache instantly, refresh in background |
+| 2026-06-23 | Save playback state via WidgetsBindingObserver | Survive OS kills |
+| 2026-06-23 | seekWhenReady with Completer + timeout | Prevent seek before audio source ready |
+| 2026-06-23 | Save article index (not ID) for resume | Simple for MVP, noted as P2 improvement |
 
 ## Blockers
 - [x] Spike: crawl feasibility — DONE (Soha feasible, Dan Tri no audio)
 - [x] Critical initialization — FIXED (c2a44ee, 1a29c21)
-- [x] Lock screen controls — FIXED (d4c573a)
+- [x] Lock screen controls — FIXED (e199c10)
 - [ ] Legal: ToS review for Soha (robots.txt allows all, but formal review pending)
 - [ ] App icon PNG files needed (1024x1024)
 - [ ] Firebase project setup (google-services.json)
@@ -49,11 +74,17 @@ READY_TO_START
 - [ ] Shorebird account init
 
 ## Test Status
-- 65 tests passing
-- Zero flutter analyze issues
-- Coverage: models, services, providers, home screen, player, playlist
+- 109 tests passing
+- Zero flutter analyze errors
+- Coverage: models, services, providers, home screen, player, playlist, settings, audio lifecycle, buffering
 
 ## Git History
+- e199c10 feat: implement 10 eng review tasks + gap fixes + review fixes
+- 1471a72 fix: use FlutterFragmentActivity for audio_service compatibility
+- 3a1def0 fix: resolve Gradle build errors (JVM target, shrinkResources)
+- 376b43c feat: add Codemagic CI/CD config for iOS build + TestFlight
+- 74abe74 feat: generate app icon, adaptive icon, and splash screen
+- 87b1a21 chore: update STATE.md — reflect post-fix state and 65 tests
 - c2a44ee feat: fix navigation, add playFromIndex, add widget tests
 - 1a29c21 fix: critical initialization, isolate parsing, retry logic, cleanup
 - d4c573a fix: integrate audio_service for lock screen controls, fix Soha test fixture
@@ -61,6 +92,6 @@ READY_TO_START
 - d39a09d feat: implement Phase 0-2 — spike validation, foundation, and UI
 
 ## Session Continuity
-Last session: 2026-06-20
-Stopped at: All code-level work complete. Next: manual setup (icon, keystore, Firebase) then Phase 4 (store submission)
+Last session: 2026-06-23
+Stopped at: All eng review tasks implemented, reviewed, and committed. Next: manual setup (icon, keystore, Firebase) then Phase 4 (store submission)
 Resume file: none
