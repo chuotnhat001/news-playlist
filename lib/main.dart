@@ -23,12 +23,18 @@ void main() async {
   };
 
   final audioService = JustAudioNewsService();
-  final audioHandler = await initAudioHandler(audioService);
+  NewsAudioHandler? audioHandler;
+  try {
+    audioHandler = await initAudioHandler(audioService);
+  } catch (e) {
+    debugPrint('[Init] AudioHandler init failed: $e');
+  }
 
   runApp(ProviderScope(
     overrides: [
       newsAudioServiceProvider.overrideWithValue(audioService),
-      audioHandlerProvider.overrideWithValue(audioHandler),
+      if (audioHandler != null)
+        audioHandlerProvider.overrideWithValue(audioHandler),
     ],
     child: const NewsPlaylistApp(),
   ));

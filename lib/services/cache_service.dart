@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -16,23 +18,40 @@ class CacheService {
     if (_initialized) return;
     final dir = await getApplicationDocumentsDirectory();
     final path = '${dir.path}/news_playlist.db';
-    _db = await openDatabase(
-      path,
-      version: 3,
-      onCreate: (db, version) async {
-        await db.execute(Article.createTableSQL);
-        await db.execute(CategoryConfig.createTableSQL);
-        await db.execute(_createPlaybackStateSQL);
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
+    try {
+      _db = await openDatabase(
+        path,
+        version: 3,
+        onCreate: (db, version) async {
+          await db.execute(Article.createTableSQL);
           await db.execute(CategoryConfig.createTableSQL);
-        }
-        if (oldVersion < 3) {
           await db.execute(_createPlaybackStateSQL);
-        }
-      },
-    );
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            await db.execute(CategoryConfig.createTableSQL);
+          }
+          if (oldVersion < 3) {
+            await db.execute(_createPlaybackStateSQL);
+          }
+        },
+      );
+    } catch (e) {
+      // If database is locked, delete and recreate
+      final file = File(path);
+      if (await file.exists()) {
+        await file.delete();
+      }
+      _db = await openDatabase(
+        path,
+        version: 3,
+        onCreate: (db, version) async {
+          await db.execute(Article.createTableSQL);
+          await db.execute(CategoryConfig.createTableSQL);
+          await db.execute(_createPlaybackStateSQL);
+        },
+      );
+    }
     _initialized = true;
   }
 
@@ -47,7 +66,7 @@ class CacheService {
 
   static const _createPlaybackStateSQL = '''
     CREATE TABLE IF NOT EXISTS playback_state (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
+      id INTEGER PRIMARY KEY DEFAULT 1,
       category TEXT NOT NULL,
       category_url TEXT,
       article_index INTEGER NOT NULL,
