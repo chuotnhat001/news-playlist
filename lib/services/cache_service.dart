@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:news_playlist/models/article.dart';
@@ -16,43 +16,59 @@ class CacheService {
 
   Future<void> init() async {
     if (_initialized) return;
-    final dir = await getApplicationDocumentsDirectory();
-    final path = '${dir.path}/news_playlist.db';
-    try {
-      _db = await openDatabase(
-        path,
-        version: 3,
-        onCreate: (db, version) async {
-          await db.execute(Article.createTableSQL);
-          await db.execute(CategoryConfig.createTableSQL);
-          await db.execute(_createPlaybackStateSQL);
-        },
-        onUpgrade: (db, oldVersion, newVersion) async {
-          if (oldVersion < 2) {
+    final dbPath = await getDatabasesPath();
+    final path = '$dbPath/news_playlist.db';
+
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        _db = await openDatabase(
+          path,
+          version: 3,
+          singleInstance: true,
+          onCreate: (db, version) async {
+            await db.execute(Article.createTableSQL);
             await db.execute(CategoryConfig.createTableSQL);
-          }
-          if (oldVersion < 3) {
             await db.execute(_createPlaybackStateSQL);
+          },
+          onUpgrade: (db, oldVersion, newVersion) async {
+            if (oldVersion < 2) {
+              await db.execute(CategoryConfig.createTableSQL);
+            }
+            if (oldVersion < 3) {
+              await db.execute(_createPlaybackStateSQL);
+            }
+          },
+        );
+        _initialized = true;
+        return;
+      } catch (e) {
+        debugPrint('[CacheService] init attempt ${attempt + 1} failed: $e');
+        if (attempt < 2) {
+          await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+        } else {
+          // Last resort: delete corrupted DB and recreate
+          try {
+            final file = File(path);
+            if (await file.exists()) {
+              await file.delete();
+            }
+            _db = await openDatabase(
+              path,
+              version: 3,
+              singleInstance: true,
+              onCreate: (db, version) async {
+                await db.execute(Article.createTableSQL);
+                await db.execute(CategoryConfig.createTableSQL);
+                await db.execute(_createPlaybackStateSQL);
+              },
+            );
+            _initialized = true;
+          } catch (e2) {
+            debugPrint('[CacheService] final init failed: $e2');
           }
-        },
-      );
-    } catch (e) {
-      // If database is locked, delete and recreate
-      final file = File(path);
-      if (await file.exists()) {
-        await file.delete();
+        }
       }
-      _db = await openDatabase(
-        path,
-        version: 3,
-        onCreate: (db, version) async {
-          await db.execute(Article.createTableSQL);
-          await db.execute(CategoryConfig.createTableSQL);
-          await db.execute(_createPlaybackStateSQL);
-        },
-      );
     }
-    _initialized = true;
   }
 
   Future<void> initWithDatabase(Database db) async {
