@@ -186,6 +186,14 @@ void main() {
         );
       });
 
+      // Mock HEAD request for audio URL validation
+      when(mockDio.head(any)).thenAnswer((invocation) async {
+        return Response(
+          statusCode: 200,
+          requestOptions: RequestOptions(path: invocation.positionalArguments[0] as String),
+        );
+      });
+
       final result = await service.crawlCategory(
         'https://dantri.com.vn/suc-manh-so.htm',
         'cong-nghe',

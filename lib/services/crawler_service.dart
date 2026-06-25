@@ -68,7 +68,13 @@ class CrawlerService {
           ),
         );
         if (article != null) {
-          articles.add(article);
+          // Validate audio URL is accessible before adding to playlist
+          final isValid = await _validateAudioUrl(article.audioUrl);
+          if (isValid) {
+            articles.add(article);
+          } else {
+            errors.add('Audio URL not accessible: ${article.audioUrl}');
+          }
         }
       } catch (e) {
         errors.add('Failed to fetch article $url: $e');
@@ -76,6 +82,16 @@ class CrawlerService {
     }
 
     return CrawlResult(articles: articles, errors: errors);
+  }
+
+  /// Validates audio URL is accessible via HEAD request.
+  Future<bool> _validateAudioUrl(String audioUrl) async {
+    try {
+      final response = await dio.head(audioUrl);
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
 }
 

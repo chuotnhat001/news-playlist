@@ -226,12 +226,14 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   }
 
   void _onPlaybackError() {
+    final article = state.currentArticle;
+    final title = article?.title ?? 'Unknown';
     if (_retryCount < _maxRetries) {
       _retryCount++;
       _playCurrentTrack();
     } else {
       _retryCount = 0;
-      state = state.copyWith(error: 'Playback error on current track');
+      state = state.copyWith(error: 'Không thể phát: $title');
       skipNext();
     }
   }
