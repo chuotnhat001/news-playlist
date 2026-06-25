@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D0D2B"/>
+      <stop offset="35%" stop-color="#1A1A4E"/>
+      <stop offset="65%" stop-color="#0A2647"/>
+      <stop offset="100%" stop-color="#144272"/>
+    </linearGradient>
+    <linearGradient id="cyan3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00DCFF"/>
+      <stop offset="100%" stop-color="#0099BB"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg3)"/>
+  <!-- Music note (large, stylized) -->
+  <path d="M420 340v300c-20-12-44-20-72-20c-53 0-96 32-96 72s43 72 96 72c50 0 90-28 96-64V440l240-60v240c-20-12-44-20-72-20c-53 0-96 32-96 72s43 72 96 72c50 0 90-28 96-64V320L420 340z" fill="url(#cyan3)" opacity="0.85"/>
+  <!-- News dot indicators (top right) -->
+  <circle cx="760" cy="260" r="12" fill="#FF6B6B" opacity="0.9"/>
+  <circle cx="760" cy="310" r="10" fill="#00DCFF" opacity="0.7"/>
+  <circle cx="760" cy="354" r="8" fill="white" opacity="0.4"/>
+  <!-- Equalizer bars (bottom center) -->
+  <rect x="400" y="780" width="16" height="40" rx="8" fill="white" opacity="0.5"/>
+  <rect x="432" y="760" width="16" height="60" rx="8" fill="#00DCFF" opacity="0.7"/>
+  <rect x="464" y="770" width="16" height="50" rx="8" fill="white" opacity="0.5"/>
+  <rect x="496" y="750" width="16" height="70" rx="8" fill="#00DCFF" opacity="0.8"/>
+  <rect x="528" y="765" width="16" height="55" rx="8" fill="white" opacity="0.5"/>
+  <rect x="560" y="775" width="16" height="45" rx="8" fill="#00DCFF" opacity="0.6"/>
+  <rect x="592" y="785" width="16" height="35" rx="8" fill="white" opacity="0.4"/>
+</svg>

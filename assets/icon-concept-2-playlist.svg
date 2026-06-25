@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D0D2B"/>
+      <stop offset="35%" stop-color="#1A1A4E"/>
+      <stop offset="65%" stop-color="#0A2647"/>
+      <stop offset="100%" stop-color="#144272"/>
+    </linearGradient>
+    <linearGradient id="cyan2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00DCFF"/>
+      <stop offset="100%" stop-color="#0088AA"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg2)"/>
+  <!-- Playlist lines (3 bars, representing article list) -->
+  <rect x="280" y="340" width="280" height="24" rx="12" fill="white" opacity="0.3"/>
+  <rect x="280" y="400" width="320" height="24" rx="12" fill="white" opacity="0.4"/>
+  <rect x="280" y="460" width="240" height="24" rx="12" fill="white" opacity="0.3"/>
+  <!-- Active playing line (highlighted) -->
+  <rect x="280" y="530" width="300" height="28" rx="14" fill="url(#cyan2)" opacity="0.9"/>
+  <!-- More lines below -->
+  <rect x="280" y="600" width="260" height="24" rx="12" fill="white" opacity="0.3"/>
+  <rect x="280" y="660" width="290" height="24" rx="12" fill="white" opacity="0.2"/>
+  <!-- Play button (left side) -->
+  <circle cx="200" cy="544" r="60" fill="url(#cyan2)" opacity="0.15"/>
+  <circle cx="200" cy="544" r="50" fill="none" stroke="url(#cyan2)" stroke-width="4"/>
+  <path d="M185 520v48l40-24z" fill="#00DCFF"/>
+  <!-- Radio/broadcast icon (top right) -->
+  <circle cx="740" cy="300" r="8" fill="#00DCFF"/>
+  <path d="M740 270c-16 0-30 14-30 30" stroke="#00DCFF" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M740 250c-28 0-50 22-50 50" stroke="#00DCFF" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.4"/>
+  <path d="M740 230c-40 0-70 30-70 70" stroke="#00DCFF" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.25"/>
+</svg>

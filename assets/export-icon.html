@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SVG to PNG - News Playlist Icon</title>
+  <style>
+    body { font-family: system-ui; background: #1a1a2e; color: white; text-align: center; padding: 40px; }
+    canvas { border: 1px solid #333; margin: 20px; }
+    button { padding: 12px 24px; font-size: 16px; background: #00DCFF; border: none; border-radius: 8px; cursor: pointer; margin: 10px; }
+    button:hover { background: #00b8d4; }
+    .preview { display: inline-block; margin: 20px; }
+    .label { font-size: 14px; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <h1>News Playlist - App Icon Export</h1>
+  <p>Click "Download PNG" to save the 1024x1024 icon</p>
+
+  <div class="preview">
+    <div class="label">Preview (512x512)</div>
+    <canvas id="preview" width="512" height="512"></canvas>
+  </div>
+
+  <div>
+    <canvas id="export" width="1024" height="1024" style="display:none"></canvas>
+  </div>
+
+  <div>
+    <button onclick="downloadPNG()">Download PNG (1024x1024)</button>
+    <button onclick="downloadAdaptive()">Download Adaptive Foreground (1024x1024)</button>
+  </div>
+
+  <script>
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D0D2B"/>
+      <stop offset="35%" stop-color="#1A1A4E"/>
+      <stop offset="65%" stop-color="#0A2647"/>
+      <stop offset="100%" stop-color="#144272"/>
+    </linearGradient>
+    <linearGradient id="cyan3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00DCFF"/>
+      <stop offset="100%" stop-color="#0099BB"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg3)"/>
+  <path d="M420 340v300c-20-12-44-20-72-20c-53 0-96 32-96 72s43 72 96 72c50 0 90-28 96-64V440l240-60v240c-20-12-44-20-72-20c-53 0-96 32-96 72s43 72 96 72c50 0 90-28 96-64V320L420 340z" fill="url(#cyan3)" opacity="0.85"/>
+  <circle cx="760" cy="260" r="12" fill="#FF6B6B" opacity="0.9"/>
+  <circle cx="760" cy="310" r="10" fill="#00DCFF" opacity="0.7"/>
+  <circle cx="760" cy="354" r="8" fill="white" opacity="0.4"/>
+  <rect x="400" y="780" width="16" height="40" rx="8" fill="white" opacity="0.5"/>
+  <rect x="432" y="760" width="16" height="60" rx="8" fill="#00DCFF" opacity="0.7"/>
+  <rect x="464" y="770" width="16" height="50" rx="8" fill="white" opacity="0.5"/>
+  <rect x="496" y="750" width="16" height="70" rx="8" fill="#00DCFF" opacity="0.8"/>
+  <rect x="528" y="765" width="16" height="55" rx="8" fill="white" opacity="0.5"/>
+  <rect x="560" y="775" width="16" height="45" rx="8" fill="#00DCFF" opacity="0.6"/>
+  <rect x="592" y="785" width="16" height="35" rx="8" fill="white" opacity="0.4"/>
+</svg>`;
+
+    // Adaptive icon foreground (no background, no rounded corners)
+    const svgAdaptive = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="cyan3a" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00DCFF"/>
+      <stop offset="100%" stop-color="#0099BB"/>
+    </linearGradient>
+  </defs>
+  <path d="M420 340v300c-20-12-44-20-72-20c-53 0-96 32-96 72s43 72 96 72c50 0 90-28 96-64V440l240-60v240c-20-12-44-20-72-20c-53 0-96 32-96 72s43 72 96 72c50 0 90-28 96-64V320L420 340z" fill="url(#cyan3a)" opacity="0.85"/>
+  <circle cx="760" cy="260" r="12" fill="#FF6B6B" opacity="0.9"/>
+  <circle cx="760" cy="310" r="10" fill="#00DCFF" opacity="0.7"/>
+  <circle cx="760" cy="354" r="8" fill="white" opacity="0.4"/>
+  <rect x="400" y="780" width="16" height="40" rx="8" fill="white" opacity="0.5"/>
+  <rect x="432" y="760" width="16" height="60" rx="8" fill="#00DCFF" opacity="0.7"/>
+  <rect x="464" y="770" width="16" height="50" rx="8" fill="white" opacity="0.5"/>
+  <rect x="496" y="750" width="16" height="70" rx="8" fill="#00DCFF" opacity="0.8"/>
+  <rect x="528" y="765" width="16" height="55" rx="8" fill="white" opacity="0.5"/>
+  <rect x="560" y="775" width="16" height="45" rx="8" fill="#00DCFF" opacity="0.6"/>
+  <rect x="592" y="785" width="16" height="35" rx="8" fill="white" opacity="0.4"/>
+</svg>`;
+
+    function renderSVG(svgStr, canvas) {
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+
+      return new Promise((resolve) => {
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        img.src = url;
+      });
+    }
+
+    function downloadPNG() {
+      const canvas = document.getElementById('export');
+      renderSVG(svgContent, canvas).then(() => {
+        const link = document.createElement('a');
+        link.download = 'app-icon-1024.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    function downloadAdaptive() {
+      const canvas = document.getElementById('export');
+      renderSVG(svgAdaptive, canvas).then(() => {
+        const link = document.createElement('a');
+        link.download = 'app-icon-adaptive-foreground-1024.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    // Render preview
+    renderSVG(svgContent, document.getElementById('preview'));
+  </script>
+</body>
+</html>

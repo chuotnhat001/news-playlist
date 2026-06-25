@@ -158,14 +158,6 @@ Ví dụ:
 * Dân Trí
 * Soha
 
-### Hỗ trợ một số chuyên mục
-
-Ví dụ:
-
-* Công nghệ
-* Kinh doanh
-* Chứng khoán
-
 ### Chức năng chính
 
 * Danh sách bài mới

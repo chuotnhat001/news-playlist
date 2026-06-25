@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D0D2B"/>
+      <stop offset="35%" stop-color="#1A1A4E"/>
+      <stop offset="65%" stop-color="#0A2647"/>
+      <stop offset="100%" stop-color="#144272"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00DCFF"/>
+      <stop offset="100%" stop-color="#0099CC"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <!-- Outer ring (headphone shape) -->
+  <path d="M512 240c-150 0-272 122-272 272v80c0 20 16 36 36 36h40c20 0 36-16 36-36v-120c0-20-16-36-36-36h-28c8-120 108-216 224-216s216 96 224 216h-28c-20 0-36 16-36 36v120c0 20 16 36 36 36h40c20 0 36-16 36-36v-80c0-150-122-272-272-272z" fill="url(#accent)" opacity="0.9"/>
+  <!-- Play triangle (center) -->
+  <path d="M460 440v200l180-100z" fill="white" opacity="0.95"/>
+  <!-- Sound waves (right side) -->
+  <path d="M660 480c20 20 32 46 32 76s-12 56-32 76" stroke="white" stroke-width="16" fill="none" opacity="0.6" stroke-linecap="round"/>
+  <path d="M700 450c32 32 52 76 52 106s-20 74-52 106" stroke="white" stroke-width="14" fill="none" opacity="0.4" stroke-linecap="round"/>
+</svg>
