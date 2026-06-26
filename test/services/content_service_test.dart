@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:news_playlist/models/article.dart';
+import 'package:news_playlist/models/category_config.dart';
 import 'package:news_playlist/services/cache_service.dart';
 import 'package:news_playlist/services/content_service.dart';
 import 'package:news_playlist/services/crawler_service.dart';
@@ -32,6 +33,12 @@ class MockCacheService extends CacheService {
   Future<void> clearExpired() async {
     clearExpiredCalled = true;
   }
+
+  @override
+  Future<List<CategoryConfig>> getCategories() async => [];
+
+  @override
+  Future<void> insertCategory(CategoryConfig category) async {}
 }
 
 class MockCrawlerService implements CrawlerService {

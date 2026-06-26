@@ -36,6 +36,30 @@ class ContentService {
   Future<void> init() async {
     await _cacheService.init();
     await _cacheService.clearExpired();
+    await _seedDefaultCategories();
+  }
+
+  static const defaultCategories = [
+    CategoryConfig(
+      id: 'soha_quoc-te',
+      name: 'Quốc Tế',
+      url: 'https://soha.vn/quoc-te.htm',
+      source: 'soha',
+    ),
+    CategoryConfig(
+      id: 'dantri_the-gioi',
+      name: 'Thế Giới',
+      url: 'https://dantri.com.vn/the-gioi.htm',
+      source: 'dantri',
+    ),
+  ];
+
+  Future<void> _seedDefaultCategories() async {
+    final existing = await _cacheService.getCategories();
+    if (existing.isNotEmpty) return;
+    for (final cat in defaultCategories) {
+      await _cacheService.insertCategory(cat);
+    }
   }
 
   // Custom categories CRUD
