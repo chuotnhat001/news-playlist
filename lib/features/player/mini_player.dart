@@ -87,7 +87,7 @@ class MiniPlayer extends ConsumerWidget {
                           notifier.resume();
                         }
                       },
-                      tooltip: state.isPlaying ? 'Tạm dừng' : 'Phát',
+                      tooltip: '',
                       icon: Icon(
                         state.isPlaying ? Icons.pause : Icons.play_arrow,
                       ),

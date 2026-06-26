@@ -97,7 +97,9 @@ class CrawlerService {
     final uri = Uri.tryParse(url);
     if (uri == null) return false;
     if (uri.scheme != 'https') return false;
-    if (!_allowedHosts.contains(uri.host)) return false;
+    if (!_allowedHosts.any((host) => uri.host == host || uri.host.endsWith('.$host'))) {
+      return false;
+    }
     if (uri.path.contains('..')) return false;
     return true;
   }

@@ -71,136 +71,137 @@ class _CategoryCardState extends State<CategoryCard>
     return SizedBox(
       height: 76,
       child: ClipRect(
-        child: Stack(
-          children: [
-            // Action buttons behind the card
-            Positioned(
-              top: 0,
-              bottom: 0,
-              right: 0,
-              width: _actionsWidth,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Material(
-                      color: Colors.blue,
-                      child: InkWell(
-                        onTap: () {
-                          _closeActions();
-                          widget.onReload?.call();
-                        },
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.refresh, color: Colors.white, size: 22),
-                            SizedBox(height: 2),
-                            Text('Reload',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 11)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Material(
-                      color: colorScheme.error,
-                      child: InkWell(
-                        onTap: () {
-                          _closeActions();
-                          widget.onDelete?.call();
-                        },
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.delete_outline,
-                                color: Colors.white, size: 22),
-                            SizedBox(height: 2),
-                            Text('Xóa',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 11)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Foreground card that slides left
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(-_actionsWidth * _controller.value, 0),
-                  child: child,
-                );
-              },
-              child: Semantics(
-                label: 'Danh mục ${_formatCategory(widget.category)}',
-                child: GestureDetector(
-                onHorizontalDragUpdate: _handleDragUpdate,
-                onHorizontalDragEnd: _handleDragEnd,
-                onTap: () {
-                  if (_actionsVisible) {
-                    _closeActions();
-                  } else {
-                    widget.onTap();
-                  }
-                },
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  child: Container(
-                    margin: EdgeInsets.zero,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: const Color(0xFF00DCFF).withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _iconForCategory(widget.category),
-                            size: 32,
-                            color: const Color(0xFF00DCFF),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  _formatCategory(widget.category),
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        color: Colors.white,
-                                      ),
-                                ),
-                                const SizedBox(height: 2),
-                                _buildSubtitle(context),
-                              ],
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Stack(
+              children: [
+                // Action buttons behind the card — only visible during swipe
+                if (_controller.value > 0)
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    right: 0,
+                    width: _actionsWidth,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Material(
+                            color: Colors.blue,
+                            child: InkWell(
+                              onTap: () {
+                                _closeActions();
+                                widget.onReload?.call();
+                              },
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.refresh, color: Colors.white, size: 22),
+                                  SizedBox(height: 2),
+                                  Text('Reload',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 11)),
+                                ],
+                              ),
                             ),
                           ),
-                          Icon(
-                            Icons.chevron_right,
-                            color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                        Expanded(
+                          child: Material(
+                            color: colorScheme.error,
+                            child: InkWell(
+                              onTap: () {
+                                _closeActions();
+                                widget.onDelete?.call();
+                              },
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.delete_outline,
+                                      color: Colors.white, size: 22),
+                                  SizedBox(height: 2),
+                                  Text('Xóa',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 11)),
+                                ],
+                              ),
+                            ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
+
+                // Foreground card that slides left
+                Transform.translate(
+                  offset: Offset(-_actionsWidth * _controller.value, 0),
+                  child: child,
+                ),
+              ],
+            );
+          },
+          child: Semantics(
+            label: 'Danh mục ${_formatCategory(widget.category)}',
+            child: GestureDetector(
+            onHorizontalDragUpdate: _handleDragUpdate,
+            onHorizontalDragEnd: _handleDragEnd,
+            onTap: () {
+              if (_actionsVisible) {
+                _closeActions();
+              } else {
+                widget.onTap();
+              }
+            },
+            child: SizedBox(
+              width: double.infinity,
+              child: Container(
+                margin: EdgeInsets.zero,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color(0xFF00DCFF).withValues(alpha: 0.15),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _iconForCategory(widget.category),
+                        size: 32,
+                        color: const Color(0xFF00DCFF),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _formatCategory(widget.category),
+                              style:
+                                  Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Colors.white,
+                                  ),
+                            ),
+                            const SizedBox(height: 2),
+                            _buildSubtitle(context),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              ),
             ),
-          ],
+          ),
+          ),
         ),
       ),
     );
