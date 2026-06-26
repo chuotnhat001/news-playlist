@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,12 +24,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final Map<String, bool> _loadingStates = {};
   bool _loading = true;
   Map<String, dynamic>? _savedPlayback;
+  StreamSubscription<String>? _refreshSub;
 
   @override
   void initState() {
     super.initState();
     _loadCategories();
     _loadPlaybackState();
+    _listenForRefresh();
+  }
+
+  void _listenForRefresh() {
+    final contentService = ref.read(contentServiceProvider);
+    _refreshSub = contentService.onBackgroundRefresh.listen((categoryId) {
+      if (mounted) {
+        _reloadCountForCategory(categoryId);
+      }
+    });
+  }
+
+  Future<void> _reloadCountForCategory(String categoryId) async {
+    final contentService = ref.read(contentServiceProvider);
+    final count = await contentService.getArticleCount(categoryId);
+    if (mounted) {
+      setState(() => _articleCounts[categoryId] = count);
+    }
+  }
+
+  @override
+  void dispose() {
+    _refreshSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadPlaybackState() async {
@@ -275,8 +302,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           category: cat.name,
           articleCount: _articleCounts[cat.id],
           isLoading: _loadingStates[cat.id] == true,
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => PlaylistScreen(
@@ -285,6 +312,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             );
+            _reloadCountForCategory(cat.id);
           },
           onReload: () => _reloadCategory(cat),
           onDelete: () => _deleteCategory(cat),
