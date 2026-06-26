@@ -68,8 +68,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Không tìm thấy bài viết'), findsOneWidget);
-      expect(find.text('Kéo xuống để tải lại'), findsOneWidget);
+      expect(find.text('Không tìm thấy audio'), findsOneWidget);
+      expect(find.textContaining('Danh mục này chưa có bài viết nào có audio'), findsOneWidget);
     });
 
     testWidgets('shows error state on failure', (tester) async {

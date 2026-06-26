@@ -60,10 +60,10 @@ class PlaylistScreen extends ConsumerWidget {
             data: (articles) {
               if (articles.isEmpty) {
                 return EmptyState(
-                  icon: Icons.article_outlined,
-                  title: 'Không tìm thấy bài viết',
-                  subtitle: 'Kéo xuống để tải lại',
-                  actionLabel: 'Tải lại',
+                  icon: Icons.music_off_outlined,
+                  title: 'Không tìm thấy audio',
+                  subtitle: 'Danh mục này chưa có bài viết nào có audio.\nThử danh mục khác hoặc quay lại sau.',
+                  actionLabel: 'Thử lại',
                   onAction: () => ref.invalidate(provider),
                 );
               }
@@ -119,52 +119,26 @@ class PlaylistScreen extends ConsumerWidget {
   }
 
   Widget _buildLoadingState() {
-    return Semantics(
-      label: 'Đang tải danh sách bài viết',
-      liveRegion: true,
-      child: ListView.builder(
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        height: 10,
-                        width: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    return Center(
+      child: Semantics(
+        label: 'Đang tìm bài viết có audio',
+        liveRegion: true,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: Color(0xFF00DCFF)),
+            const SizedBox(height: 24),
+            Text(
+              'Đang tìm bài viết có audio...',
+              style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
-          );
-        },
+            const SizedBox(height: 8),
+            Text(
+              'Quá trình này có thể mất 10-30 giây',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+            ),
+          ],
+        ),
       ),
     );
   }
