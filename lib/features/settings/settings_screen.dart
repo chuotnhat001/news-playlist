@@ -247,11 +247,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                           color: Colors.white
-                                              .withValues(alpha: 0.5)),
+                                              .withValues(alpha: 0.7)),
                                     ),
                                     trailing: IconButton(
                                       icon: const Icon(Icons.delete_outline,
                                           color: Colors.redAccent),
+                                      tooltip: 'Xóa danh mục ${cat.name}',
                                       onPressed: () =>
                                           _removeCategory(cat.id),
                                     ),

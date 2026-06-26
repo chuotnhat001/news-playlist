@@ -18,7 +18,7 @@ class PlayerControls extends ConsumerWidget {
       children: [
         IconButton(
           onPressed: isFirst ? null : () => notifier.skipPrevious(),
-          tooltip: '',
+          tooltip: 'Bài trước',
           icon: const Icon(Icons.skip_previous),
           iconSize: 36,
           color: Colors.white,
@@ -34,7 +34,7 @@ class PlayerControls extends ConsumerWidget {
               notifier.resume();
             }
           },
-          tooltip: '',
+          tooltip: state.isPlaying ? 'Tạm dừng' : 'Phát',
           icon: state.isLoading
               ? const SizedBox(
                   width: 32,
@@ -53,7 +53,7 @@ class PlayerControls extends ConsumerWidget {
         const SizedBox(width: 16),
         IconButton(
           onPressed: isLast ? null : () => notifier.skipNext(),
-          tooltip: '',
+          tooltip: 'Bài tiếp',
           icon: const Icon(Icons.skip_next),
           iconSize: 36,
           color: Colors.white,

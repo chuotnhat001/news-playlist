@@ -142,9 +142,14 @@ class _CategoryCardState extends State<CategoryCard>
           },
           child: Semantics(
             label: 'Danh mục ${_formatCategory(widget.category)}',
+            button: true,
+            hint: widget.onDelete != null ? 'Nhấn giữ để xem tùy chọn' : null,
             child: GestureDetector(
             onHorizontalDragUpdate: _handleDragUpdate,
             onHorizontalDragEnd: _handleDragEnd,
+            onLongPress: widget.onDelete != null || widget.onReload != null
+                ? () => _showActionsMenu()
+                : null,
             onTap: () {
               if (_actionsVisible) {
                 _closeActions();
@@ -207,6 +212,37 @@ class _CategoryCardState extends State<CategoryCard>
     );
   }
 
+  void _showActionsMenu() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.onReload != null)
+              ListTile(
+                leading: const Icon(Icons.refresh),
+                title: const Text('Tải lại'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  widget.onReload!();
+                },
+              ),
+            if (widget.onDelete != null)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text('Xóa', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  widget.onDelete!();
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSubtitle(BuildContext context) {
     if (widget.isLoading) {
       return Row(
@@ -220,11 +256,14 @@ class _CategoryCardState extends State<CategoryCard>
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            'Đang tải...',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              'Đang tải...',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+            ),
           ),
         ],
       );
@@ -233,8 +272,8 @@ class _CategoryCardState extends State<CategoryCard>
     final count = widget.articleCount;
     final text = count != null ? '$count bài viết' : 'Chưa tải';
     final color = count != null && count > 0
-        ? Colors.white.withValues(alpha: 0.6)
-        : Colors.white.withValues(alpha: 0.3);
+        ? Colors.white.withValues(alpha: 0.7)
+        : Colors.white.withValues(alpha: 0.6);
 
     return Text(
       text,

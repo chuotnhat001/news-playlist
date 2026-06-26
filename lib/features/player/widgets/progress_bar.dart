@@ -30,6 +30,10 @@ class ProgressBar extends ConsumerWidget {
                         .seekTo(Duration(milliseconds: value.toInt()));
                   }
                 : null,
+            semanticFormatterCallback: (value) {
+              final pos = Duration(milliseconds: value.toInt());
+              return '${_formatDuration(pos)} / ${_formatDuration(duration)}';
+            },
           ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),

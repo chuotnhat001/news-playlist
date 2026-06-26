@@ -77,21 +77,25 @@ class MiniPlayer extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        final notifier =
-                            ref.read(audioPlayerProvider.notifier);
-                        if (state.isPlaying) {
-                          notifier.pause();
-                        } else {
-                          notifier.resume();
-                        }
-                      },
-                      tooltip: '',
-                      icon: Icon(
-                        state.isPlaying ? Icons.pause : Icons.play_arrow,
+                    Semantics(
+                      label: state.isPlaying ? 'Tạm dừng' : 'Phát',
+                      button: true,
+                      child: IconButton(
+                        onPressed: () {
+                          final notifier =
+                              ref.read(audioPlayerProvider.notifier);
+                          if (state.isPlaying) {
+                            notifier.pause();
+                          } else {
+                            notifier.resume();
+                          }
+                        },
+                        tooltip: '',
+                        icon: Icon(
+                          state.isPlaying ? Icons.pause : Icons.play_arrow,
+                        ),
+                        style: IconButton.styleFrom(minimumSize: const Size(56, 56)),
                       ),
-                      style: IconButton.styleFrom(minimumSize: const Size(56, 56)),
                     ),
                   ],
                 ),
