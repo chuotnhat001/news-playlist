@@ -91,7 +91,7 @@ class PlaylistScreen extends ConsumerWidget {
                       onTap: () {
                         ref
                             .read(audioPlayerProvider.notifier)
-                            .playFromIndex(articles, index);
+                            .playFromIndex(articles, index, category: category, categoryUrl: categoryUrl);
                       },
                     );
                   },
@@ -108,7 +108,7 @@ class PlaylistScreen extends ConsumerWidget {
                   AnalyticsService().logPlayAll(category, articles.length);
                   ref
                       .read(audioPlayerProvider.notifier)
-                      .setPlaylist(articles);
+                      .setPlaylist(articles, category: category, categoryUrl: categoryUrl);
                 },
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('Phát tất cả'),

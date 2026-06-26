@@ -31,7 +31,9 @@ class AudioPlayerState {
   });
 
   Article? get currentArticle =>
-      playlist.isEmpty ? null : playlist[currentIndex];
+      playlist.isEmpty || currentIndex < 0 || currentIndex >= playlist.length
+          ? null
+          : playlist[currentIndex];
 
   AudioPlayerState copyWith({
     List<Article>? playlist,

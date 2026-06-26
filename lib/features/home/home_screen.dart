@@ -43,11 +43,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final playback = _savedPlayback!;
     setState(() => _savedPlayback = null); // Prevent double-tap
 
-    final category = playback['category'] as String;
+    final category = playback['category'];
+    final articleIndex = playback['article_index'];
+    if (category is! String || articleIndex is! int) {
+      final cacheService = ref.read(cacheServiceProvider);
+      await cacheService.clearPlaybackState();
+      return;
+    }
     final categoryUrl = playback['category_url'] as String?;
-    final articleIndex = playback['article_index'] as int;
     final articleId = playback['article_id'] as String?;
-    final positionMs = playback['position_ms'] as int;
+    final positionMs = (playback['position_ms'] as int?) ?? 0;
 
     final contentService = ref.read(contentServiceProvider);
     final articles = categoryUrl != null

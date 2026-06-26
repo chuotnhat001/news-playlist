@@ -26,6 +26,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _loadCategories() async {
     final contentService = ref.read(contentServiceProvider);
     final categories = await contentService.getCustomCategories();
+    if (!mounted) return;
     setState(() {
       _categories = categories;
       _loading = false;
