@@ -108,7 +108,7 @@ class _NewsPlaylistAppState extends ConsumerState<NewsPlaylistApp>
             children: [
               const Icon(Icons.error_outline, size: 48),
               const SizedBox(height: 16),
-              Text('Init error: $_error'),
+              Text('Không thể khởi động ứng dụng'),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {

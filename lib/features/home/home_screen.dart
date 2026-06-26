@@ -97,13 +97,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadArticleCounts(List<CategoryConfig> categories) async {
     final contentService = ref.read(contentServiceProvider);
-    for (final cat in categories) {
-      final count = await contentService.getArticleCount(cat.id);
-      if (mounted) {
-        setState(() {
-          _articleCounts[cat.id] = count;
-        });
-      }
+    final counts = await Future.wait(
+      categories.map((cat) => contentService.getArticleCount(cat.id)),
+    );
+    if (mounted) {
+      setState(() {
+        for (var i = 0; i < categories.length; i++) {
+          _articleCounts[categories[i].id] = counts[i];
+        }
+      });
     }
   }
 

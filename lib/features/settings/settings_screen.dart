@@ -52,6 +52,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
       return;
     }
+    final uri = Uri.tryParse(url);
+    if (uri == null || !_isAllowedHost(uri.host)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chỉ hỗ trợ URL từ soha.vn hoặc dantri.com.vn')),
+        );
+      }
+      return;
+    }
 
     final category = CategoryConfig.fromUrl(url, name);
     final contentService = ref.read(contentServiceProvider);
@@ -62,6 +71,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _urlController.clear();
     FocusScope.of(context).unfocus();
     await _loadCategories();
+  }
+
+  static const _allowedHosts = {'soha.vn', 'dantri.com.vn'};
+
+  bool _isAllowedHost(String host) {
+    return _allowedHosts.any((h) => host == h || host.endsWith('.$h'));
   }
 
   Future<void> _removeCategory(String id) async {

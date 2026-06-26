@@ -63,7 +63,7 @@ class CrawlerService {
 
     for (final url in urlsToFetch) {
       try {
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 100));
         final response = await dio.get<String>(url);
         final html = response.data ?? '';
         // Parse each article in isolate

@@ -53,7 +53,7 @@ class PlaylistScreen extends ConsumerWidget {
             error: (error, _) => EmptyState(
               icon: Icons.error_outline,
               title: 'Không tải được bài viết',
-              subtitle: error.toString(),
+              subtitle: 'Vui lòng kiểm tra kết nối mạng và thử lại',
               actionLabel: 'Thử lại',
               onAction: () => ref.invalidate(provider),
             ),

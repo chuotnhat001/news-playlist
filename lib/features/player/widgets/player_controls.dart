@@ -8,10 +8,13 @@ class PlayerControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(audioPlayerProvider);
+    final isPlaying = ref.watch(audioPlayerProvider.select((s) => s.isPlaying));
+    final isLoading = ref.watch(audioPlayerProvider.select((s) => s.isLoading));
+    final currentIndex = ref.watch(audioPlayerProvider.select((s) => s.currentIndex));
+    final playlistLength = ref.watch(audioPlayerProvider.select((s) => s.playlist.length));
     final notifier = ref.read(audioPlayerProvider.notifier);
-    final isFirst = state.currentIndex == 0;
-    final isLast = state.currentIndex >= state.playlist.length - 1;
+    final isFirst = currentIndex == 0;
+    final isLast = currentIndex >= playlistLength - 1;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -28,14 +31,14 @@ class PlayerControls extends ConsumerWidget {
         const SizedBox(width: 16),
         IconButton(
           onPressed: () {
-            if (state.isPlaying) {
+            if (isPlaying) {
               notifier.pause();
             } else {
               notifier.resume();
             }
           },
-          tooltip: state.isPlaying ? 'Tạm dừng' : 'Phát',
-          icon: state.isLoading
+          tooltip: isPlaying ? 'Tạm dừng' : 'Phát',
+          icon: isLoading
               ? const SizedBox(
                   width: 32,
                   height: 32,
@@ -45,7 +48,7 @@ class PlayerControls extends ConsumerWidget {
                   ),
                 )
               : Icon(
-                  state.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                  isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
                 ),
           iconSize: 64,
           color: const Color(0xFF00DCFF),

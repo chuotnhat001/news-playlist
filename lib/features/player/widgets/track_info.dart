@@ -8,8 +8,9 @@ class TrackInfo extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(audioPlayerProvider);
-    final article = state.currentArticle;
+    final article = ref.watch(
+      audioPlayerProvider.select((s) => s.currentArticle),
+    );
 
     if (article == null) {
       return const SizedBox.shrink();
