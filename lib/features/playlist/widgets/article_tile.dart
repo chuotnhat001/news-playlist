@@ -15,14 +15,16 @@ class ArticleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: const Icon(Icons.audiotrack),
+      leading: const Icon(Icons.audiotrack, color: Color(0xFF00DCFF)),
       title: Text(
         article.title,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: Colors.white),
       ),
       subtitle: Text(
         '${article.source} • ${_formatDate(article.publishedAt)}',
+        style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
       ),
       onTap: onTap,
     );

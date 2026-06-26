@@ -23,19 +23,19 @@ class TrackInfo extends ConsumerWidget {
           height: 200,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Theme.of(context).colorScheme.primaryContainer,
-                Theme.of(context).colorScheme.secondaryContainer,
+                Color(0xFF1A1A4E),
+                Color(0xFF144272),
               ],
             ),
           ),
-          child: Icon(
+          child: const Icon(
             Icons.headphones,
             size: 80,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            color: Color(0xFF00DCFF),
           ),
         ),
         const SizedBox(height: 24),
@@ -43,7 +43,9 @@ class TrackInfo extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Text(
             article.title,
-            style: Theme.of(context).textTheme.headlineSmall,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                ),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -53,7 +55,7 @@ class TrackInfo extends ConsumerWidget {
         Text(
           article.source,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: Colors.white70,
               ),
         ),
       ],

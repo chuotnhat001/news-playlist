@@ -22,59 +22,84 @@ class PlaylistScreen extends ConsumerWidget {
     final articlesAsync = ref.watch(provider);
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(_formatCategory(category)),
-      ),
-      body: articlesAsync.when(
-        loading: () => _buildLoadingState(),
-        error: (error, _) => EmptyState(
-          icon: Icons.error_outline,
-          title: 'Không tải được bài viết',
-          subtitle: error.toString(),
-          actionLabel: 'Thử lại',
-          onAction: () => ref.invalidate(provider),
+        title: Text(
+          _formatCategory(category),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
-        data: (articles) {
-          if (articles.isEmpty) {
-            return EmptyState(
-              icon: Icons.article_outlined,
-              title: 'Không tìm thấy bài viết',
-              subtitle: 'Kéo xuống để tải lại',
-              actionLabel: 'Tải lại',
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D0D2B),
+              Color(0xFF1A1A4E),
+              Color(0xFF0A2647),
+              Color(0xFF144272),
+            ],
+            stops: [0.0, 0.35, 0.65, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: articlesAsync.when(
+            loading: () => _buildLoadingState(),
+            error: (error, _) => EmptyState(
+              icon: Icons.error_outline,
+              title: 'Không tải được bài viết',
+              subtitle: error.toString(),
+              actionLabel: 'Thử lại',
               onAction: () => ref.invalidate(provider),
-            );
-          }
-          return RefreshIndicator(
-            onRefresh: () async {
-              final contentService = ref.read(contentServiceProvider);
-              try {
-                if (categoryUrl != null) {
-                  await contentService.refreshUrl(categoryUrl!, category);
-                } else {
-                  await contentService.refreshCategory(category);
-                }
-                ref.invalidate(provider);
-              } catch (e) {
-                if (context.mounted) {
-                  showErrorToast(context, 'Tải lại thất bại: $e');
-                }
-              }
-            },
-            child: ListView.builder(
-              itemCount: articles.length,
-              itemBuilder: (context, index) {
-                return ArticleTile(
-                  article: articles[index],
-                  onTap: () {
-                    ref
-                        .read(audioPlayerProvider.notifier)
-                        .playFromIndex(articles, index);
-                  },
-                );
-              },
             ),
-          );
-        },
+            data: (articles) {
+              if (articles.isEmpty) {
+                return EmptyState(
+                  icon: Icons.article_outlined,
+                  title: 'Không tìm thấy bài viết',
+                  subtitle: 'Kéo xuống để tải lại',
+                  actionLabel: 'Tải lại',
+                  onAction: () => ref.invalidate(provider),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: () async {
+                  final contentService = ref.read(contentServiceProvider);
+                  try {
+                    if (categoryUrl != null) {
+                      await contentService.refreshUrl(categoryUrl!, category);
+                    } else {
+                      await contentService.refreshCategory(category);
+                    }
+                    ref.invalidate(provider);
+                  } catch (e) {
+                    if (context.mounted) {
+                      showErrorToast(context, 'Tải lại thất bại: $e');
+                    }
+                  }
+                },
+                child: ListView.builder(
+                  itemCount: articles.length,
+                  itemBuilder: (context, index) {
+                    return ArticleTile(
+                      article: articles[index],
+                      onTap: () {
+                        ref
+                            .read(audioPlayerProvider.notifier)
+                            .playFromIndex(articles, index);
+                      },
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
       ),
       floatingActionButton: articlesAsync.whenOrNull(
         data: (articles) => articles.isNotEmpty
@@ -105,7 +130,7 @@ class PlaylistScreen extends ConsumerWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -117,7 +142,7 @@ class PlaylistScreen extends ConsumerWidget {
                     Container(
                       height: 14,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -126,7 +151,7 @@ class PlaylistScreen extends ConsumerWidget {
                       height: 10,
                       width: 120,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
+                        color: Colors.white.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),

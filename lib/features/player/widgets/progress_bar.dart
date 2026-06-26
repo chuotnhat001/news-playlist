@@ -38,11 +38,15 @@ class ProgressBar extends ConsumerWidget {
             children: [
               Text(
                 _formatDuration(position),
-                style: Theme.of(context).textTheme.bodySmall,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white70,
+                    ),
               ),
               Text(
                 _formatDuration(duration),
-                style: Theme.of(context).textTheme.bodySmall,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white70,
+                    ),
               ),
             ],
           ),

@@ -41,7 +41,7 @@ void main() {
         ),
       );
 
-      expect(find.text('No track selected'), findsOneWidget);
+      expect(find.text('Chưa chọn bài nghe'), findsOneWidget);
     });
 
     testWidgets('shows track info when playing', (tester) async {
@@ -58,10 +58,10 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Now Playing'), findsOneWidget);
+      expect(find.text('Đang phát'), findsOneWidget);
       expect(find.text('First Article Title'), findsOneWidget);
       expect(find.text('soha'), findsOneWidget);
-      expect(find.text('Track 1 of 2'), findsOneWidget);
+      expect(find.text('Bài 1 / 2'), findsOneWidget);
     });
   });
 

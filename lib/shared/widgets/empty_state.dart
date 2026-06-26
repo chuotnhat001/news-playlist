@@ -27,12 +27,14 @@ class EmptyState extends StatelessWidget {
             Icon(
               icon,
               size: 64,
-              color: Theme.of(context).colorScheme.secondary,
+              color: const Color(0xFF00DCFF),
             ),
             const SizedBox(height: 16),
             Text(
               title,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                  ),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
@@ -40,7 +42,7 @@ class EmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: Colors.white70,
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -49,6 +51,10 @@ class EmptyState extends StatelessWidget {
               const SizedBox(height: 24),
               OutlinedButton(
                 onPressed: onAction,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF00DCFF),
+                  side: const BorderSide(color: Color(0xFF00DCFF)),
+                ),
                 child: Text(actionLabel!),
               ),
             ],

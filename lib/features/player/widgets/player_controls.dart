@@ -18,9 +18,11 @@ class PlayerControls extends ConsumerWidget {
       children: [
         IconButton(
           onPressed: isFirst ? null : () => notifier.skipPrevious(),
-          tooltip: 'Bài trước',
+          tooltip: '',
           icon: const Icon(Icons.skip_previous),
           iconSize: 36,
+          color: Colors.white,
+          disabledColor: Colors.white38,
           style: IconButton.styleFrom(minimumSize: const Size(56, 56)),
         ),
         const SizedBox(width: 16),
@@ -32,25 +34,30 @@ class PlayerControls extends ConsumerWidget {
               notifier.resume();
             }
           },
-          tooltip: state.isPlaying ? 'Tạm dừng' : 'Phát',
+          tooltip: '',
           icon: state.isLoading
               ? const SizedBox(
                   width: 32,
                   height: 32,
-                  child: CircularProgressIndicator(strokeWidth: 3),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: Color(0xFF00DCFF),
+                  ),
                 )
               : Icon(
                   state.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
                 ),
           iconSize: 64,
-          color: Theme.of(context).colorScheme.primary,
+          color: const Color(0xFF00DCFF),
         ),
         const SizedBox(width: 16),
         IconButton(
           onPressed: isLast ? null : () => notifier.skipNext(),
-          tooltip: 'Bài tiếp',
+          tooltip: '',
           icon: const Icon(Icons.skip_next),
           iconSize: 36,
+          color: Colors.white,
+          disabledColor: Colors.white38,
           style: IconButton.styleFrom(minimumSize: const Size(56, 56)),
         ),
       ],
