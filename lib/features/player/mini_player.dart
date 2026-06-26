@@ -33,10 +33,10 @@ class MiniPlayer extends ConsumerWidget {
         },
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            color: const Color(0xFF0D0D2B),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 4,
                 offset: const Offset(0, -1),
               ),
@@ -53,7 +53,7 @@ class MiniPlayer extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.music_note, size: 24),
+                    const Icon(Icons.music_note, size: 24, color: Color(0xFF00DCFF)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -64,14 +64,14 @@ class MiniPlayer extends ConsumerWidget {
                             article.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white,
+                                ),
                           ),
                           Text(
                             article.source,
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                                  color: Colors.white70,
                                 ),
                           ),
                         ],
@@ -93,6 +93,7 @@ class MiniPlayer extends ConsumerWidget {
                         tooltip: '',
                         icon: Icon(
                           state.isPlaying ? Icons.pause : Icons.play_arrow,
+                          color: Colors.white,
                         ),
                         style: IconButton.styleFrom(minimumSize: const Size(56, 56)),
                       ),
