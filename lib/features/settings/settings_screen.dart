@@ -44,10 +44,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
       return;
     }
-    if (!url.startsWith('http')) {
+    if (!url.startsWith('https://')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('URL phải bắt đầu bằng http:// hoặc https://')),
+          const SnackBar(content: Text('URL phải bắt đầu bằng https://')),
         );
       }
       return;
@@ -57,6 +57,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final contentService = ref.read(contentServiceProvider);
     await contentService.addCategory(category);
 
+    if (!mounted) return;
     _nameController.clear();
     _urlController.clear();
     FocusScope.of(context).unfocus();

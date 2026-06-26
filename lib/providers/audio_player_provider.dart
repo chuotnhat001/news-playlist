@@ -56,6 +56,42 @@ class AudioPlayerState {
       categoryUrl: categoryUrl ?? this.categoryUrl,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AudioPlayerState &&
+          other.currentIndex == currentIndex &&
+          other.isPlaying == isPlaying &&
+          other.position == position &&
+          other.duration == duration &&
+          other.isLoading == isLoading &&
+          other.error == error &&
+          other.category == category &&
+          other.categoryUrl == categoryUrl &&
+          _listEquals(other.playlist, playlist);
+
+  @override
+  int get hashCode => Object.hash(
+        currentIndex,
+        isPlaying,
+        position,
+        duration,
+        isLoading,
+        error,
+        category,
+        categoryUrl,
+        Object.hashAll(playlist),
+      );
+
+  static bool _listEquals(List<Article> a, List<Article> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 }
 
 class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
@@ -222,7 +258,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
   void _onTrackComplete() {
     _retryCount = 0;
-    skipNext();
+    unawaited(skipNext());
   }
 
   void _onPlaybackError() {
@@ -230,11 +266,11 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     final title = article?.title ?? 'Unknown';
     if (_retryCount < _maxRetries) {
       _retryCount++;
-      _playCurrentTrack();
+      unawaited(_playCurrentTrack());
     } else {
       _retryCount = 0;
       state = state.copyWith(error: 'Không thể phát: $title');
-      skipNext();
+      unawaited(skipNext());
     }
   }
 
@@ -259,7 +295,11 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   @override
   void dispose() {
     _saveTimer?.cancel();
-    _savePlaybackState();
+    try {
+      _savePlaybackState();
+    } catch (_) {
+      // DB may already be closed during app teardown
+    }
     _playbackSub?.cancel();
     _positionSub?.cancel();
     _durationSub?.cancel();
@@ -282,6 +322,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
       category: s.category!,
       categoryUrl: s.categoryUrl,
       articleIndex: s.currentIndex,
+      articleId: s.currentArticle?.id,
       positionMs: s.position.inMilliseconds,
     );
   }

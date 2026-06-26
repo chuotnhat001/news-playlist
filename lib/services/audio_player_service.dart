@@ -20,6 +20,39 @@ abstract class NewsAudioService {
 
 class JustAudioNewsService implements NewsAudioService {
   final AudioPlayer _player = AudioPlayer();
+  final StreamController<PlaybackState> _playbackController =
+      StreamController<PlaybackState>.broadcast();
+  StreamSubscription<PlayerState>? _playerStateSub;
+  bool _wasPlaying = false;
+
+  JustAudioNewsService() {
+    _playerStateSub = _player.playerStateStream.listen(_handlePlayerState);
+  }
+
+  void _handlePlayerState(PlayerState state) {
+    if (state.processingState == ProcessingState.completed) {
+      _wasPlaying = false;
+      _playbackController.add(PlaybackState.completed);
+      return;
+    }
+    if (state.processingState == ProcessingState.loading ||
+        state.processingState == ProcessingState.buffering) {
+      _playbackController.add(PlaybackState.loading);
+      return;
+    }
+    if (state.playing) {
+      _wasPlaying = true;
+      _playbackController.add(PlaybackState.playing);
+      return;
+    }
+    if (state.processingState == ProcessingState.idle && _wasPlaying) {
+      _wasPlaying = false;
+      _playbackController.add(PlaybackState.error);
+      return;
+    }
+    _wasPlaying = false;
+    _playbackController.add(PlaybackState.paused);
+  }
 
   @override
   Stream<Duration> get positionStream => _player.positionStream;
@@ -28,46 +61,39 @@ class JustAudioNewsService implements NewsAudioService {
   Stream<Duration?> get durationStream => _player.durationStream;
 
   @override
-  Stream<PlaybackState> get playbackStateStream =>
-      _player.playerStateStream.map((state) {
-        if (state.processingState == ProcessingState.completed) {
-          return PlaybackState.completed;
-        }
-        if (state.processingState == ProcessingState.loading ||
-            state.processingState == ProcessingState.buffering) {
-          return PlaybackState.loading;
-        }
-        if (state.playing) return PlaybackState.playing;
-        return PlaybackState.paused;
-      });
+  Stream<PlaybackState> get playbackStateStream => _playbackController.stream;
 
   @override
   Future<void> playUrl(String url, {String? title, String? artist}) async {
-    try {
-      await _player.setUrl(url);
-      await _player.play();
-    } catch (e) {
-      // Emit error through playerStateStream indirectly — just_audio handles this
-      // via ProcessingState, but setUrl failures throw before the stream updates.
-      // Re-throw so callers can handle.
-      rethrow;
-    }
+    _wasPlaying = false;
+    await _player.setUrl(url);
+    await _player.play();
   }
 
   @override
-  Future<void> pause() async => await _player.pause();
+  Future<void> pause() async {
+    _wasPlaying = false;
+    await _player.pause();
+  }
 
   @override
   Future<void> resume() async => await _player.play();
 
   @override
-  Future<void> stop() async => await _player.stop();
+  Future<void> stop() async {
+    _wasPlaying = false;
+    await _player.stop();
+  }
 
   @override
   Future<void> seek(Duration position) async => await _player.seek(position);
 
   @override
-  Future<void> dispose() async => await _player.dispose();
+  Future<void> dispose() async {
+    await _playerStateSub?.cancel();
+    await _playbackController.close();
+    await _player.dispose();
+  }
 }
 
 class NewsAudioHandler extends BaseAudioHandler with SeekHandler {

@@ -24,6 +24,15 @@ class CrawlerService {
   final SourceCrawler crawler;
   final Dio dio;
 
+  static const _allowedHosts = {
+    'dantri.com.vn',
+    'cdn.dantri.com.vn',
+    'cdnimg.vietnamplus.vn',
+    'tts.mediacdn.vn',
+    'soha.vn',
+    'cdn.soha.vn',
+  };
+
   CrawlerService({required this.crawler, required this.dio});
 
   Future<CrawlResult> crawlCategory(
@@ -67,14 +76,10 @@ class CrawlerService {
             crawlerType: crawlerType,
           ),
         );
-        if (article != null) {
-          // Validate audio URL is accessible before adding to playlist
-          final isValid = await _validateAudioUrl(article.audioUrl);
-          if (isValid) {
-            articles.add(article);
-          } else {
-            errors.add('Audio URL not accessible: ${article.audioUrl}');
-          }
+        if (article != null && _isValidArticle(article)) {
+          articles.add(article);
+        } else if (article != null) {
+          errors.add('Invalid URL in article: ${article.audioUrl}');
         }
       } catch (e) {
         errors.add('Failed to fetch article $url: $e');
@@ -84,14 +89,17 @@ class CrawlerService {
     return CrawlResult(articles: articles, errors: errors);
   }
 
-  /// Validates audio URL is accessible via HEAD request.
-  Future<bool> _validateAudioUrl(String audioUrl) async {
-    try {
-      final response = await dio.head(audioUrl);
-      return response.statusCode == 200;
-    } catch (_) {
-      return false;
-    }
+  static bool _isValidArticle(Article article) {
+    return _isValidUrl(article.audioUrl) && _isValidUrl(article.articleUrl);
+  }
+
+  static bool _isValidUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return false;
+    if (uri.scheme != 'https') return false;
+    if (!_allowedHosts.contains(uri.host)) return false;
+    if (uri.path.contains('..')) return false;
+    return true;
   }
 }
 

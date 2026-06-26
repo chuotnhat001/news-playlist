@@ -23,7 +23,7 @@ class CacheService {
       try {
         _db = await openDatabase(
           path,
-          version: 3,
+          version: 4,
           singleInstance: true,
           onCreate: (db, version) async {
             await db.execute(Article.createTableSQL);
@@ -36,6 +36,11 @@ class CacheService {
             }
             if (oldVersion < 3) {
               await db.execute(_createPlaybackStateSQL);
+            }
+            if (oldVersion < 4) {
+              await db.execute(
+                'ALTER TABLE playback_state ADD COLUMN article_id TEXT',
+              );
             }
           },
         );
@@ -54,7 +59,7 @@ class CacheService {
             }
             _db = await openDatabase(
               path,
-              version: 3,
+              version: 4,
               singleInstance: true,
               onCreate: (db, version) async {
                 await db.execute(Article.createTableSQL);
@@ -86,6 +91,7 @@ class CacheService {
       category TEXT NOT NULL,
       category_url TEXT,
       article_index INTEGER NOT NULL,
+      article_id TEXT,
       position_ms INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     )
@@ -174,6 +180,7 @@ class CacheService {
     required String category,
     String? categoryUrl,
     required int articleIndex,
+    String? articleId,
     required int positionMs,
   }) async {
     await _db.insert(
@@ -183,6 +190,7 @@ class CacheService {
         'category': category,
         'category_url': categoryUrl,
         'article_index': articleIndex,
+        'article_id': articleId,
         'position_ms': positionMs,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },

@@ -129,18 +129,15 @@ class ContentService {
     final urls = categoryUrls[category];
     if (urls == null) return [];
 
-    final allArticles = <Article>[];
-
+    final futures = <Future<CrawlResult>>[];
     for (final entry in _crawlerServices.entries) {
-      final sourceName = entry.key;
-      final crawler = entry.value;
-      final listingUrl = urls[sourceName];
-
+      final listingUrl = urls[entry.key];
       if (listingUrl == null) continue;
-
-      final result = await crawler.crawlCategory(listingUrl, category);
-      allArticles.addAll(result.articles);
+      futures.add(entry.value.crawlCategory(listingUrl, category));
     }
+
+    final results = await Future.wait(futures);
+    final allArticles = results.expand((r) => r.articles).toList();
 
     if (allArticles.isNotEmpty) {
       await _cacheService.insertArticles(allArticles);

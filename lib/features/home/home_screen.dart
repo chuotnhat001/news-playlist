@@ -46,6 +46,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final category = playback['category'] as String;
     final categoryUrl = playback['category_url'] as String?;
     final articleIndex = playback['article_index'] as int;
+    final articleId = playback['article_id'] as String?;
     final positionMs = playback['position_ms'] as int;
 
     final contentService = ref.read(contentServiceProvider);
@@ -53,14 +54,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? await contentService.getArticlesFromUrl(categoryUrl, category)
         : await contentService.getArticles(category);
 
-    if (articles.isEmpty || articleIndex >= articles.length) {
+    if (!mounted) return;
+
+    if (articles.isEmpty) {
+      final cacheService = ref.read(cacheServiceProvider);
+      await cacheService.clearPlaybackState();
+      return;
+    }
+
+    // Find article by ID first, fallback to index
+    int resolvedIndex;
+    if (articleId != null) {
+      final idIndex = articles.indexWhere((a) => a.id == articleId);
+      resolvedIndex = idIndex >= 0 ? idIndex : articleIndex;
+    } else {
+      resolvedIndex = articleIndex;
+    }
+
+    if (resolvedIndex >= articles.length) {
       final cacheService = ref.read(cacheServiceProvider);
       await cacheService.clearPlaybackState();
       return;
     }
 
     final notifier = ref.read(audioPlayerProvider.notifier);
-    await notifier.playFromIndex(articles, articleIndex, category: category, categoryUrl: categoryUrl);
+    await notifier.playFromIndex(articles, resolvedIndex, category: category, categoryUrl: categoryUrl);
+    if (!mounted) return;
     await notifier.seekWhenReady(Duration(milliseconds: positionMs));
   }
 
