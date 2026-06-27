@@ -12,6 +12,10 @@ class ContentService {
   final _refreshController = StreamController<String>.broadcast();
   Stream<String> get onBackgroundRefresh => _refreshController.stream;
 
+  /// Last crawl diagnostic per category — for UI display when articles empty
+  final Map<String, String> _lastCrawlDiagnostic = {};
+  String? getDiagnostic(String categoryId) => _lastCrawlDiagnostic[categoryId];
+
   static const categoryUrls = {
     'cong-nghe': {
       'dantri': 'https://dantri.com.vn/suc-manh-so.htm',
@@ -137,9 +141,33 @@ class ContentService {
     } else if (host.contains('dantri.com.vn')) {
       crawler = _crawlerServices['dantri'];
     }
-    if (crawler == null) return [];
+    if (crawler == null) {
+      _lastCrawlDiagnostic[categoryId] = 'Không hỗ trợ nguồn: $host';
+      return [];
+    }
 
     final result = await crawler.crawlCategory(url, categoryId);
+    if (result.articles.isEmpty) {
+      final diag = StringBuffer();
+      if (result.totalArticlesFound == 0) {
+        diag.write('Không tìm thấy bài viết nào trên trang.');
+      } else {
+        diag.write('Đã quét ${result.totalArticlesFound} bài viết.');
+        if (result.noAudioCount > 0) {
+          diag.write('\n${result.noAudioCount} bài không có audio.');
+        }
+        if (result.invalidUrlCount > 0) {
+          diag.write('\n${result.invalidUrlCount} bài có URL không hợp lệ.');
+        }
+      }
+      if (result.errors.isNotEmpty) {
+        diag.write('\n\nLỗi: ${result.errors.first}');
+      }
+      _lastCrawlDiagnostic[categoryId] = diag.toString();
+    } else {
+      _lastCrawlDiagnostic.remove(categoryId);
+    }
+
     if (result.articles.isNotEmpty) {
       await _cacheService.insertArticles(result.articles);
     }

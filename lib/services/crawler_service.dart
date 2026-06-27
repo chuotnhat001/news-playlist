@@ -13,8 +13,17 @@ abstract class SourceCrawler {
 class CrawlResult {
   final List<Article> articles;
   final List<String> errors;
+  final int totalArticlesFound;
+  final int noAudioCount;
+  final int invalidUrlCount;
 
-  const CrawlResult({required this.articles, required this.errors});
+  const CrawlResult({
+    required this.articles,
+    required this.errors,
+    this.totalArticlesFound = 0,
+    this.noAudioCount = 0,
+    this.invalidUrlCount = 0,
+  });
 
   bool get hasErrors => errors.isNotEmpty;
   int get successCount => articles.length;
@@ -41,6 +50,8 @@ class CrawlerService {
   ) async {
     final articles = <Article>[];
     final errors = <String>[];
+    var noAudioCount = 0;
+    var invalidUrlCount = 0;
 
     final String listingHtml;
     try {
@@ -49,7 +60,7 @@ class CrawlerService {
     } catch (e) {
       return CrawlResult(
         articles: [],
-        errors: ['Failed to fetch listing page $listingUrl: $e'],
+        errors: ['Không thể tải trang danh mục: $e'],
       );
     }
 
@@ -61,12 +72,19 @@ class CrawlerService {
     );
     final urlsToFetch = articleUrls.take(10).toList();
 
+    if (urlsToFetch.isEmpty) {
+      return CrawlResult(
+        articles: [],
+        errors: ['Không tìm thấy bài viết nào trên trang'],
+        totalArticlesFound: 0,
+      );
+    }
+
     for (final url in urlsToFetch) {
       try {
         await Future.delayed(const Duration(milliseconds: 100));
         final response = await dio.get<String>(url);
         final html = response.data ?? '';
-        // Parse each article in isolate
         final article = await compute(
           _parseArticleIsolate,
           _ArticlePayload(
@@ -76,17 +94,26 @@ class CrawlerService {
             crawlerType: crawlerType,
           ),
         );
-        if (article != null && _isValidArticle(article)) {
+        if (article == null) {
+          noAudioCount++;
+        } else if (_isValidArticle(article)) {
           articles.add(article);
-        } else if (article != null) {
-          errors.add('Invalid URL in article: ${article.audioUrl}');
+        } else {
+          invalidUrlCount++;
+          errors.add('URL không hợp lệ: ${article.audioUrl}');
         }
       } catch (e) {
-        errors.add('Failed to fetch article $url: $e');
+        errors.add('Lỗi tải bài: $e');
       }
     }
 
-    return CrawlResult(articles: articles, errors: errors);
+    return CrawlResult(
+      articles: articles,
+      errors: errors,
+      totalArticlesFound: urlsToFetch.length,
+      noAudioCount: noAudioCount,
+      invalidUrlCount: invalidUrlCount,
+    );
   }
 
   static bool _isValidArticle(Article article) {

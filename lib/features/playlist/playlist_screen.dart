@@ -59,10 +59,13 @@ class PlaylistScreen extends ConsumerWidget {
             ),
             data: (articles) {
               if (articles.isEmpty) {
+                final contentService = ref.read(contentServiceProvider);
+                final diagnostic = contentService.getDiagnostic(category);
                 return EmptyState(
                   icon: Icons.music_off_outlined,
                   title: 'Không tìm thấy audio',
-                  subtitle: 'Danh mục này chưa có bài viết nào có audio.\nThử danh mục khác hoặc quay lại sau.',
+                  subtitle: diagnostic ??
+                      'Danh mục này chưa có bài viết nào có audio.\nThử danh mục khác hoặc quay lại sau.',
                   actionLabel: 'Thử lại',
                   onAction: () => ref.invalidate(provider),
                 );

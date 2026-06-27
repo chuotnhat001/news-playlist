@@ -251,7 +251,7 @@ void main() {
 
       expect(result.successCount, 0);
       expect(result.hasErrors, isTrue);
-      expect(result.errors.first, contains('Failed to fetch listing page'));
+      expect(result.errors.first, contains('Không thể tải trang danh mục'));
     });
   });
 }
