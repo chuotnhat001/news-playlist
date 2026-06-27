@@ -1,0 +1,5 @@
+{
+  "name": "news-playlist",
+  "version": "0.1.0",
+  "description": "Supabase Edge Functions for News Playlist backend"
+}
