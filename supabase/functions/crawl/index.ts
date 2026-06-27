@@ -106,7 +106,13 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { category_id } = await req.json();
+    let category_id: string | undefined;
+    try {
+      const body = await req.json();
+      category_id = body.category_id;
+    } catch {
+      // Empty body = crawl all categories
+    }
 
     let categories: Category[];
     if (category_id) {
