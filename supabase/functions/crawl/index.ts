@@ -3,6 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import {
   parseSohaListing,
   parseSohaArticle,
+  parseTuoitreListing,
+  parseTuoitreArticle,
   parseDantriListing,
   parseDantriArticle,
   validateCrawlUrl,
@@ -22,8 +24,25 @@ async function crawlCategory(category: Category): Promise<CrawlResult> {
     no_audio_count: 0,
   };
 
-  const parseListing = category.source === "soha" ? parseSohaListing : parseDantriListing;
-  const parseArticle = category.source === "soha" ? parseSohaArticle : parseDantriArticle;
+  let parseListing: (html: string) => string[];
+  let parseArticle: (html: string, url: string, catId: string) => CrawledArticle | null;
+
+  switch (category.source) {
+    case "soha":
+      parseListing = parseSohaListing;
+      parseArticle = parseSohaArticle;
+      break;
+    case "tuoitre":
+      parseListing = parseTuoitreListing;
+      parseArticle = parseTuoitreArticle;
+      break;
+    case "dantri":
+      parseListing = parseDantriListing;
+      parseArticle = parseDantriArticle;
+      break;
+    default:
+      return { ...result, errors: [`Unknown source: ${category.source}`] };
+  }
 
   let listingHtml: string;
   try {

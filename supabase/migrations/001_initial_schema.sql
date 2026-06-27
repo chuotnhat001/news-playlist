@@ -25,7 +25,7 @@ CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at DE
 
 -- Seed default categories
 INSERT INTO categories (id, name, url, source) VALUES
-  ('soha_quoc-te', 'Quốc Tế', 'https://soha.vn/quoc-te.htm', 'soha'),
-  ('dantri_the-gioi', 'Thế Giới', 'https://dantri.com.vn/the-gioi.htm', 'dantri'),
-  ('soha_cong-nghe', 'Công Nghệ', 'https://soha.vn/cong-nghe.htm', 'soha')
+  ('soha_quoc-te', 'Quốc Tế (Soha)', 'https://soha.vn/quoc-te.htm', 'soha'),
+  ('tuoitre_the-gioi', 'Thế Giới (Tuổi Trẻ)', 'https://tuoitre.vn/the-gioi.htm', 'tuoitre'),
+  ('soha_cong-nghe', 'Công Nghệ (Soha)', 'https://soha.vn/cong-nghe.htm', 'soha')
 ON CONFLICT (id) DO NOTHING;
