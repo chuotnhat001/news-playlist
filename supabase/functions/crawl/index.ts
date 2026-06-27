@@ -9,8 +9,8 @@ import {
 } from "../_shared/crawlers.ts";
 import { Category, CrawlResult, CrawledArticle } from "../_shared/types.ts";
 
-const CRAWL_DELAY_MS = 500;
-const MAX_ARTICLES = 10;
+const CRAWL_DELAY_MS = 300;
+const MAX_ARTICLES = 8;
 
 async function crawlCategory(category: Category): Promise<CrawlResult> {
   validateCrawlUrl(category.url);
@@ -147,7 +147,13 @@ serve(async (req) => {
           crawled_at: new Date().toISOString(),
         }));
 
-        await supabase.from("articles").upsert(rows, { onConflict: "id" });
+        const { error: upsertError } = await supabase
+          .from("articles")
+          .upsert(rows, { onConflict: "id" });
+
+        if (upsertError) {
+          results[category.id].errors.push(`DB upsert failed: ${upsertError.message}`);
+        }
       }
 
       await supabase

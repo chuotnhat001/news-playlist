@@ -22,27 +22,27 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const url = new URL(req.url);
     const categoryId = url.searchParams.get("category_id");
 
     if (categoryId) {
-      const { data: category } = await supabase
+      const { data: category, error: catError } = await supabase
         .from("categories")
         .select("*")
         .eq("id", categoryId)
         .single();
 
-      if (!category) {
+      if (catError || !category) {
         return new Response(
           JSON.stringify({ error: "Category not found" }),
           { status: 404, headers: CORS_HEADERS }
         );
       }
 
-      const { data: articles } = await supabase
+      const { data: articles, error: artError } = await supabase
         .from("articles")
         .select("id, title, source, audio_url, article_url, published_at")
         .eq("category_id", categoryId)
@@ -55,20 +55,33 @@ serve(async (req) => {
       );
     }
 
-    // Return all categories with article counts
-    const { data: categories } = await supabase
+    // Return all categories with article counts using a single RPC or joined query
+    const { data: categories, error: catError } = await supabase
       .from("categories")
       .select("*");
 
-    const result = [];
-    for (const cat of categories || []) {
-      const { count } = await supabase
-        .from("articles")
-        .select("*", { count: "exact", head: true })
-        .eq("category_id", cat.id);
-
-      result.push({ ...cat, article_count: count || 0 });
+    if (catError || !categories) {
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch categories" }),
+        { status: 500, headers: CORS_HEADERS }
+      );
     }
+
+    // Batch count: single query for all category counts
+    const { data: counts } = await supabase
+      .from("articles")
+      .select("category_id")
+      .in("category_id", categories.map((c) => c.id));
+
+    const countMap: Record<string, number> = {};
+    for (const row of counts || []) {
+      countMap[row.category_id] = (countMap[row.category_id] || 0) + 1;
+    }
+
+    const result = categories.map((cat) => ({
+      ...cat,
+      article_count: countMap[cat.id] || 0,
+    }));
 
     return new Response(JSON.stringify(result), { headers: CORS_HEADERS });
   } catch (e) {
