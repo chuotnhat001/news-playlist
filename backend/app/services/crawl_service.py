@@ -1,16 +1,18 @@
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import httpx
-from sqlalchemy import delete, func, select
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.crawlers.base import CrawlResult, CrawledArticle, SourceCrawler
+from app.crawlers.base import CrawlResult, SourceCrawler
 from app.crawlers.dantri import DantriCrawler
 from app.crawlers.soha import SohaCrawler
+from app.database import async_session
 from app.models import Article, Category
 
 logger = logging.getLogger(__name__)
@@ -20,16 +22,31 @@ CRAWLERS: dict[str, SourceCrawler] = {
     "dantri": DantriCrawler(),
 }
 
+ALLOWED_CRAWL_HOSTS = {"soha.vn", "www.soha.vn", "dantri.com.vn", "www.dantri.com.vn"}
+
+
+def _validate_crawl_url(url: str) -> None:
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    if parsed.scheme != "https":
+        raise ValueError(f"Only HTTPS URLs allowed: {url}")
+    if not any(host == h or host.endswith(f".{h}") for h in ALLOWED_CRAWL_HOSTS):
+        raise ValueError(f"Disallowed crawl target: {host}")
+
 
 def get_crawler_for_url(url: str) -> SourceCrawler | None:
-    if "soha.vn" in url:
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    if "soha.vn" in host:
         return CRAWLERS["soha"]
-    if "dantri.com.vn" in url:
+    if "dantri.com.vn" in host:
         return CRAWLERS["dantri"]
     return None
 
 
 async def crawl_category(category: Category) -> CrawlResult:
+    _validate_crawl_url(category.url)
+
     crawler = get_crawler_for_url(category.url)
     if not crawler:
         return CrawlResult(errors=[f"No crawler for URL: {category.url}"])
@@ -57,6 +74,12 @@ async def crawl_category(category: Category) -> CrawlResult:
             return result
 
         for url in urls_to_fetch:
+            try:
+                _validate_crawl_url(url)
+            except ValueError:
+                result.errors.append(f"Skipped disallowed URL: {url}")
+                continue
+
             try:
                 await asyncio.sleep(settings.crawl_delay_seconds)
                 resp = await client.get(url)
@@ -87,13 +110,13 @@ async def crawl_and_store(category: Category, db: AsyncSession) -> CrawlResult:
                 article_url=article.article_url,
                 category_id=category.id,
                 published_at=datetime.fromisoformat(article.published_at),
-                crawled_at=datetime.now(),
+                crawled_at=datetime.now(timezone.utc),
             ).on_conflict_do_update(
                 index_elements=["id"],
                 set_={
                     "title": article.title,
                     "audio_url": article.audio_url,
-                    "crawled_at": datetime.now(),
+                    "crawled_at": datetime.now(timezone.utc),
                 },
             )
             await db.execute(stmt)
@@ -106,13 +129,15 @@ async def crawl_and_store(category: Category, db: AsyncSession) -> CrawlResult:
     return result
 
 
-async def refresh_all_categories(db: AsyncSession) -> None:
-    stmt = select(Category)
-    result = await db.execute(stmt)
-    categories = result.scalars().all()
+async def refresh_all_categories() -> None:
+    async with async_session() as db:
+        stmt = select(Category)
+        result = await db.execute(stmt)
+        categories = result.scalars().all()
 
     for category in categories:
-        try:
-            await crawl_and_store(category, db)
-        except Exception as e:
-            logger.error(f"Failed to refresh {category.id}: {e}")
+        async with async_session() as db:
+            try:
+                await crawl_and_store(category, db)
+            except Exception as e:
+                logger.error(f"Failed to refresh {category.id}: {e}")

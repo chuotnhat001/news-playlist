@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -14,7 +14,10 @@ class Category(Base):
     url: Mapped[str] = mapped_column(Text, nullable=False)
     source: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now()
+        DateTime(timezone=True), server_default=func.now()
+    )
+    last_crawled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
 
@@ -26,8 +29,15 @@ class Article(Base):
     source: Mapped[str] = mapped_column(String(50), nullable=False)
     audio_url: Mapped[str] = mapped_column(Text, nullable=False)
     article_url: Mapped[str] = mapped_column(Text, nullable=False)
-    category_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    published_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    category_id: Mapped[str] = mapped_column(
+        String(100),
+        ForeignKey("categories.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    published_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     crawled_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now()
+        DateTime(timezone=True), server_default=func.now()
     )

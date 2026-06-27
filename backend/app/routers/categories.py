@@ -1,12 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
 from app.models import Article, Category
 
 router = APIRouter(prefix="/api/categories", tags=["categories"])
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def require_api_key(key: str | None = Security(api_key_header)):
+    if not settings.api_key:
+        return
+    if key != settings.api_key:
+        raise HTTPException(401, "Invalid or missing API key")
 
 
 class CategoryResponse(BaseModel):
@@ -26,28 +37,32 @@ class CategoryCreate(BaseModel):
 
 @router.get("", response_model=list[CategoryResponse])
 async def get_categories(db: AsyncSession = Depends(get_db)):
-    stmt = select(Category)
+    stmt = (
+        select(Category, func.count(Article.id).label("article_count"))
+        .outerjoin(Article, Article.category_id == Category.id)
+        .group_by(Category.id)
+    )
     result = await db.execute(stmt)
-    categories = result.scalars().all()
+    rows = result.all()
 
-    response = []
-    for cat in categories:
-        count_stmt = select(func.count()).where(Article.category_id == cat.id)
-        count_result = await db.execute(count_stmt)
-        count = count_result.scalar() or 0
-        response.append(
-            CategoryResponse(
-                id=cat.id,
-                name=cat.name,
-                url=cat.url,
-                source=cat.source,
-                article_count=count,
-            )
+    return [
+        CategoryResponse(
+            id=cat.id,
+            name=cat.name,
+            url=cat.url,
+            source=cat.source,
+            article_count=count,
         )
-    return response
+        for cat, count in rows
+    ]
 
 
-@router.post("", response_model=CategoryResponse, status_code=201)
+@router.post(
+    "",
+    response_model=CategoryResponse,
+    status_code=201,
+    dependencies=[Depends(require_api_key)],
+)
 async def create_category(
     body: CategoryCreate, db: AsyncSession = Depends(get_db)
 ):
@@ -83,7 +98,11 @@ async def create_category(
     )
 
 
-@router.delete("/{category_id}", status_code=204)
+@router.delete(
+    "/{category_id}",
+    status_code=204,
+    dependencies=[Depends(require_api_key)],
+)
 async def delete_category(
     category_id: str, db: AsyncSession = Depends(get_db)
 ):
