@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,8 +11,6 @@ import 'package:news_playlist/services/content_service.dart';
 
 import 'fake_audio_service.dart';
 import 'test_fixtures.dart';
-
-int _dbCounter = 0;
 
 Future<Widget> createTestApp({
   FakeNewsAudioService? audioService,
@@ -34,7 +33,7 @@ Future<Widget> createTestApp({
 
   final content = ContentService(
     cacheService: cache,
-    crawlerServices: {},
+    dio: Dio(),
   );
 
   return ProviderScope(
