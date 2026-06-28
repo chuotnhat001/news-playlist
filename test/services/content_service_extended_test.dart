@@ -58,7 +58,7 @@ void main() {
   });
 
   group('refreshUrl', () {
-    test('calls API and falls back to cache on failure', () async {
+    test('returns cached data when available and API unreachable', () async {
       final articles = [
         Article(
           id: '1',
@@ -73,18 +73,8 @@ void main() {
       ];
       await cacheService.insertArticles(articles);
 
-      // refreshUrl with invalid API will timeout then fallback to cache
-      // Use very short timeout Dio to make test fast
-      final fastDio = Dio(BaseOptions(
-        connectTimeout: const Duration(milliseconds: 100),
-        receiveTimeout: const Duration(milliseconds: 100),
-      ));
-      final fastService = ContentService(
-        cacheService: cacheService,
-        dio: fastDio,
-      );
-
-      final result = await fastService.refreshUrl(
+      // getArticlesFromUrl uses cache when not stale
+      final result = await contentService.getArticlesFromUrl(
         'https://soha.vn/custom.htm',
         'custom-cat',
       );

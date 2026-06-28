@@ -89,6 +89,8 @@ class ContentService {
     return _getArticlesFromApi(categoryId, forceRefresh: true);
   }
 
+  static const _apiKey = 'REDACTED';
+
   Future<List<Article>> _getArticlesFromApi(
     String categoryId, {
     bool forceRefresh = false,
@@ -98,6 +100,22 @@ class ContentService {
       if (!stale) {
         final cached = await _cacheService.getArticlesByCategory(categoryId);
         if (cached.isNotEmpty) return cached;
+      }
+    }
+
+    // When force refresh, trigger crawl first
+    if (forceRefresh) {
+      try {
+        await _dio.post<dynamic>(
+          '$_supabaseUrl/functions/v1/crawl',
+          data: {'category_id': categoryId},
+          options: Options(headers: {
+            ..._headers,
+            'x-api-key': _apiKey,
+          }),
+        );
+      } catch (_) {
+        // Crawl failed — continue to fetch whatever is in DB
       }
     }
 
@@ -115,7 +133,7 @@ class ContentService {
 
       final articlesJson = data['articles'] as List<dynamic>? ?? [];
       if (articlesJson.isEmpty) {
-        _lastDiagnostic = 'Server không có bài viết nào cho danh mục này.\nHãy đợi hệ thống cập nhật (mỗi 30 phút).';
+        _lastDiagnostic = 'Không tìm thấy bài viết có audio cho danh mục này.';
         return _cacheService.getArticlesByCategory(categoryId);
       }
 
