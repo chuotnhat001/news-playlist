@@ -186,6 +186,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.delete_outline));
       await tester.pumpAndSettle();
 
+      // Confirm deletion in dialog
+      await tester.tap(find.widgetWithText(TextButton, 'Xóa'));
+      await tester.pumpAndSettle();
+
       expect(fakeCacheService.categories, isEmpty);
     });
   });

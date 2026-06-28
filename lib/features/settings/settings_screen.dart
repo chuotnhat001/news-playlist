@@ -80,7 +80,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return _allowedHosts.any((h) => host == h || host.endsWith('.$h'));
   }
 
-  Future<void> _removeCategory(String id) async {
+  Future<void> _removeCategory(String id, String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xóa danh mục'),
+        content: Text('Bạn có chắc muốn xóa "$name"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Xóa', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     final contentService = ref.read(contentServiceProvider);
     await contentService.removeCategory(id);
     await _loadCategories();
@@ -270,7 +288,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                           color: Colors.redAccent),
                                       tooltip: 'Xóa danh mục ${cat.name}',
                                       onPressed: () =>
-                                          _removeCategory(cat.id),
+                                          _removeCategory(cat.id, cat.name),
                                     ),
                                   ),
                                 );

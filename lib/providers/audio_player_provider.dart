@@ -7,6 +7,8 @@ import 'package:news_playlist/providers/content_provider.dart';
 import 'package:news_playlist/services/audio_player_service.dart';
 import 'package:news_playlist/services/cache_service.dart';
 
+const _sentinel = Object();
+
 class AudioPlayerState {
   final List<Article> playlist;
   final int currentIndex;
@@ -42,9 +44,9 @@ class AudioPlayerState {
     Duration? position,
     Duration? duration,
     bool? isLoading,
-    String? error,
-    String? category,
-    String? categoryUrl,
+    Object? error = _sentinel,
+    Object? category = _sentinel,
+    Object? categoryUrl = _sentinel,
   }) {
     return AudioPlayerState(
       playlist: playlist ?? this.playlist,
@@ -53,9 +55,9 @@ class AudioPlayerState {
       position: position ?? this.position,
       duration: duration ?? this.duration,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
-      category: category ?? this.category,
-      categoryUrl: categoryUrl ?? this.categoryUrl,
+      error: identical(error, _sentinel) ? this.error : error as String?,
+      category: identical(category, _sentinel) ? this.category : category as String?,
+      categoryUrl: identical(categoryUrl, _sentinel) ? this.categoryUrl : categoryUrl as String?,
     );
   }
 
@@ -244,6 +246,9 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     if (state.duration > Duration.zero) {
       await _audioService.seek(position);
       return;
+    }
+    if (_readyCompleter != null && !_readyCompleter!.isCompleted) {
+      _readyCompleter!.complete();
     }
     _readyCompleter = Completer<void>();
     await _readyCompleter!.future.timeout(

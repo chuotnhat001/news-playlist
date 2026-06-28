@@ -10,7 +10,7 @@ final cacheServiceProvider = Provider<CacheService>((ref) {
 });
 
 final contentServiceProvider = Provider<ContentService>((ref) {
-  final cacheService = ref.read(cacheServiceProvider);
+  final cacheService = ref.watch(cacheServiceProvider);
   final dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 15),
     receiveTimeout: const Duration(seconds: 30),
@@ -29,12 +29,12 @@ final contentServiceProvider = Provider<ContentService>((ref) {
 
 final articlesProvider =
     FutureProvider.family<List<Article>, String>((ref, category) async {
-  final contentService = ref.read(contentServiceProvider);
+  final contentService = ref.watch(contentServiceProvider);
   return contentService.getArticles(category);
 });
 
 final articlesFromUrlProvider = FutureProvider.family<List<Article>,
     ({String url, String categoryId})>((ref, params) async {
-  final contentService = ref.read(contentServiceProvider);
+  final contentService = ref.watch(contentServiceProvider);
   return contentService.getArticlesFromUrl(params.url, params.categoryId);
 });

@@ -9,15 +9,26 @@ class MiniPlayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(audioPlayerProvider);
-    final article = state.currentArticle;
+    final article = ref.watch(
+      audioPlayerProvider.select((s) => s.currentArticle),
+    );
 
     if (article == null) {
       return const SizedBox.shrink();
     }
 
-    final duration = state.duration;
-    final position = state.position;
+    final duration = ref.watch(
+      audioPlayerProvider.select((s) => s.duration),
+    );
+    final position = ref.watch(
+      audioPlayerProvider.select((s) => s.position),
+    );
+    final isLoading = ref.watch(
+      audioPlayerProvider.select((s) => s.isLoading),
+    );
+    final isPlaying = ref.watch(
+      audioPlayerProvider.select((s) => s.isPlaying),
+    );
     final progress = duration.inMilliseconds > 0
         ? position.inMilliseconds / duration.inMilliseconds
         : 0.0;
@@ -46,7 +57,7 @@ class MiniPlayer extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               LinearProgressIndicator(
-                value: state.isLoading ? null : progress.clamp(0.0, 1.0),
+                value: isLoading ? null : progress.clamp(0.0, 1.0),
                 minHeight: 2,
               ),
               Padding(
@@ -78,13 +89,13 @@ class MiniPlayer extends ConsumerWidget {
                       ),
                     ),
                     Semantics(
-                      label: state.isPlaying ? 'Tạm dừng' : 'Phát',
+                      label: isPlaying ? 'Tạm dừng' : 'Phát',
                       button: true,
                       child: IconButton(
                         onPressed: () {
                           final notifier =
                               ref.read(audioPlayerProvider.notifier);
-                          if (state.isPlaying) {
+                          if (isPlaying) {
                             notifier.pause();
                           } else {
                             notifier.resume();
@@ -92,7 +103,7 @@ class MiniPlayer extends ConsumerWidget {
                         },
                         tooltip: '',
                         icon: Icon(
-                          state.isPlaying ? Icons.pause : Icons.play_arrow,
+                          isPlaying ? Icons.pause : Icons.play_arrow,
                           color: Colors.white,
                         ),
                         style: IconButton.styleFrom(minimumSize: const Size(56, 56)),

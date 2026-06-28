@@ -8,14 +8,20 @@ class ProgressBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(audioPlayerProvider);
-    final position = state.position;
-    final duration = state.duration;
+    final position = ref.watch(
+      audioPlayerProvider.select((s) => s.position),
+    );
+    final duration = ref.watch(
+      audioPlayerProvider.select((s) => s.duration),
+    );
+    final isLoading = ref.watch(
+      audioPlayerProvider.select((s) => s.isLoading),
+    );
     final maxMillis = duration.inMilliseconds.toDouble();
 
     return Column(
       children: [
-        if (state.isLoading)
+        if (isLoading)
           const LinearProgressIndicator(minHeight: 4)
         else
           Slider(

@@ -22,6 +22,22 @@ void main() async {
     return true;
   };
 
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      child: Container(
+        color: const Color(0xFF0D0D2B),
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Text(
+            'Đã xảy ra lỗi hiển thị.',
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  };
+
   final audioService = JustAudioNewsService();
   NewsAudioHandler? audioHandler;
   try {

@@ -163,6 +163,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 context,
                 MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
+              if (!mounted) return;
               _loadCategories();
             },
           ),
@@ -224,6 +225,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   context,
                   MaterialPageRoute(builder: (_) => const SettingsScreen()),
                 );
+                if (!mounted) return;
                 _loadCategories();
               },
               style: ElevatedButton.styleFrom(
