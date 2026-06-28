@@ -10,9 +10,18 @@ class ContentService {
   final CacheService _cacheService;
   final Dio _dio;
 
-  static const _supabaseUrl = 'https://zkzpdsijcpnrzczmlpfk.supabase.co';
-  static const _anonKey =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprenBkc2lqY3Bucnpjem1scGZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjI3NDMsImV4cCI6MjA5ODEzODc0M30.N87qUI5DRbjHfMkczOA0ZAn9iOFI3khuyfyudTlLTtc';
+  static const _supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://zkzpdsijcpnrzczmlpfk.supabase.co',
+  );
+  static const _anonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
+  static const _apiKey = String.fromEnvironment(
+    'CRAWL_API_KEY',
+    defaultValue: '',
+  );
 
   final _refreshController = StreamController<String>.broadcast();
   Stream<String> get onBackgroundRefresh => _refreshController.stream;
@@ -88,8 +97,6 @@ class ContentService {
   Future<List<Article>> refreshUrl(String url, String categoryId) async {
     return _getArticlesFromApi(categoryId, forceRefresh: true);
   }
-
-  static const _apiKey = 'REDACTED';
 
   Future<List<Article>> _getArticlesFromApi(
     String categoryId, {
