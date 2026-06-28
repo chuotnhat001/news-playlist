@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +8,7 @@ import 'package:news_playlist/models/article.dart';
 import 'package:news_playlist/models/category_config.dart';
 import 'package:news_playlist/services/cache_service.dart';
 import 'package:news_playlist/services/content_service.dart';
-import 'package:news_playlist/services/crawler_service.dart';
+
 import 'package:news_playlist/providers/content_provider.dart';
 
 class FakeCacheService extends CacheService {
@@ -53,7 +54,7 @@ void main() {
     fakeCacheService = FakeCacheService();
     contentService = ContentService(
       cacheService: fakeCacheService,
-      crawlerServices: <String, CrawlerService>{},
+      dio: Dio(),
     );
   });
 

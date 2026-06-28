@@ -1,192 +1,53 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:news_playlist/models/article.dart';
 import 'package:news_playlist/services/cache_service.dart';
 import 'package:news_playlist/services/content_service.dart';
-import 'package:news_playlist/services/crawler_service.dart';
-
-class MockCacheService extends CacheService {
-  bool staleResult = true;
-  List<Article> cachedArticles = [];
-  List<Article> insertedArticles = [];
-  bool initCalled = false;
-  bool clearExpiredCalled = false;
-
-  @override
-  bool get isReady => true;
-
-  @override
-  Future<void> init() async {
-    initCalled = true;
-  }
-
-  @override
-  Future<bool> isStale(String category) async => staleResult;
-
-  @override
-  Future<List<Article>> getArticlesByCategory(String category) async =>
-      cachedArticles;
-
-  @override
-  Future<void> insertArticles(List<Article> articles) async {
-    insertedArticles = articles;
-  }
-
-  @override
-  Future<void> clearExpired() async {
-    clearExpiredCalled = true;
-  }
-}
-
-class MockCrawlerService implements CrawlerService {
-  CrawlResult? result;
-  bool shouldThrow = false;
-  bool crawlCalled = false;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-
-  @override
-  Future<CrawlResult> crawlCategory(String listingUrl, String category) async {
-    crawlCalled = true;
-    if (shouldThrow) throw Exception('Crawl failed');
-    return result ?? CrawlResult(articles: [], errors: []);
-  }
-}
-
-Article _buildArticle({
-  required String id,
-  required String source,
-  required String category,
-  required DateTime publishedAt,
-}) {
-  return Article(
-    id: id,
-    title: 'Article $id',
-    source: source,
-    audioUrl: 'https://cdn.example.com/$id.mp3',
-    articleUrl: 'https://example.com/$id',
-    category: category,
-    publishedAt: publishedAt,
-    cachedAt: DateTime.now(),
-  );
-}
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  late MockCacheService mockCache;
-  late MockCrawlerService mockSohaCrawler;
+  late CacheService cacheService;
   late ContentService contentService;
 
-  setUp(() {
-    mockCache = MockCacheService();
-    mockSohaCrawler = MockCrawlerService();
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
+  setUp(() async {
+    cacheService = CacheService();
+    await cacheService.init();
+    await cacheService.clearAll();
+    await cacheService.clearPlaybackState();
+
+    final dio = Dio(BaseOptions(
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ));
+
     contentService = ContentService(
-      cacheService: mockCache,
-      crawlerServices: {'soha': mockSohaCrawler},
+      cacheService: cacheService,
+      dio: dio,
     );
   });
 
   group('getArticlesFromUrl', () {
     test('returns cached data when cache is fresh', () async {
-      mockCache.staleResult = false;
-      mockCache.cachedArticles = [
-        _buildArticle(id: '1', source: 'soha', category: 'custom-cat', publishedAt: DateTime(2026, 6, 20)),
+      final articles = [
+        Article(
+          id: '1',
+          title: 'Article 1',
+          source: 'soha',
+          audioUrl: 'https://tts.mediacdn.vn/1.m4a',
+          articleUrl: 'https://soha.vn/1.htm',
+          category: 'custom-cat',
+          publishedAt: DateTime(2026, 6, 20),
+          cachedAt: DateTime.now(),
+        ),
       ];
+      await cacheService.insertArticles(articles);
 
       final result = await contentService.getArticlesFromUrl(
-        'https://soha.vn/custom.htm',
-        'custom-cat',
-      );
-
-      expect(result.length, 1);
-      expect(mockSohaCrawler.crawlCalled, false);
-    });
-
-    test('returns stale cache immediately via stale-while-revalidate', () async {
-      mockCache.staleResult = true;
-      mockCache.cachedArticles = [
-        _buildArticle(id: '1', source: 'soha', category: 'custom-cat', publishedAt: DateTime(2026, 6, 18)),
-      ];
-      mockSohaCrawler.result = CrawlResult(
-        articles: [
-          _buildArticle(id: '2', source: 'soha', category: 'custom-cat', publishedAt: DateTime(2026, 6, 20)),
-        ],
-        errors: [],
-      );
-
-      final result = await contentService.getArticlesFromUrl(
-        'https://soha.vn/custom.htm',
-        'custom-cat',
-      );
-
-      // Returns stale cache immediately
-      expect(result.length, 1);
-      expect(result[0].id, '1');
-      // Background crawl was triggered (fire-and-forget)
-      await Future.delayed(const Duration(milliseconds: 10));
-      expect(mockSohaCrawler.crawlCalled, true);
-    });
-
-    test('crawls synchronously when no cache exists', () async {
-      mockCache.staleResult = true;
-      mockCache.cachedArticles = [];
-      mockSohaCrawler.result = CrawlResult(
-        articles: [
-          _buildArticle(id: '1', source: 'soha', category: 'custom-cat', publishedAt: DateTime(2026, 6, 20)),
-        ],
-        errors: [],
-      );
-
-      final result = await contentService.getArticlesFromUrl(
-        'https://soha.vn/custom.htm',
-        'custom-cat',
-      );
-
-      expect(result.length, 1);
-      expect(result[0].id, '1');
-      expect(mockSohaCrawler.crawlCalled, true);
-    });
-
-    test('returns empty list when no cache and crawl fails', () async {
-      mockCache.staleResult = true;
-      mockCache.cachedArticles = [];
-      mockSohaCrawler.shouldThrow = true;
-
-      final result = await contentService.getArticlesFromUrl(
-        'https://soha.vn/custom.htm',
-        'custom-cat',
-      );
-
-      expect(result, isEmpty);
-    });
-  });
-
-  group('refreshUrl', () {
-    test('always crawls even when cache is fresh', () async {
-      mockCache.staleResult = false;
-      mockSohaCrawler.result = CrawlResult(
-        articles: [
-          _buildArticle(id: '1', source: 'soha', category: 'custom-cat', publishedAt: DateTime(2026, 6, 20)),
-        ],
-        errors: [],
-      );
-
-      final result = await contentService.refreshUrl(
-        'https://soha.vn/custom.htm',
-        'custom-cat',
-      );
-
-      expect(result.length, 1);
-      expect(mockSohaCrawler.crawlCalled, true);
-    });
-
-    test('falls back to cache on crawl failure', () async {
-      mockCache.staleResult = false;
-      mockSohaCrawler.shouldThrow = true;
-      mockCache.cachedArticles = [
-        _buildArticle(id: '1', source: 'soha', category: 'custom-cat', publishedAt: DateTime(2026, 6, 18)),
-      ];
-
-      final result = await contentService.refreshUrl(
         'https://soha.vn/custom.htm',
         'custom-cat',
       );
@@ -196,21 +57,46 @@ void main() {
     });
   });
 
-  group('stale-while-revalidate', () {
-    test('background crawl error does not crash', () async {
-      mockCache.staleResult = true;
-      mockCache.cachedArticles = [
-        _buildArticle(id: '1', source: 'soha', category: 'cong-nghe', publishedAt: DateTime(2026, 6, 18)),
+  group('refreshUrl', () {
+    test('calls API and falls back to cache on failure', () async {
+      final articles = [
+        Article(
+          id: '1',
+          title: 'Cached Article',
+          source: 'soha',
+          audioUrl: 'https://tts.mediacdn.vn/1.m4a',
+          articleUrl: 'https://soha.vn/1.htm',
+          category: 'custom-cat',
+          publishedAt: DateTime(2026, 6, 18),
+          cachedAt: DateTime.now(),
+        ),
       ];
-      mockSohaCrawler.shouldThrow = true;
+      await cacheService.insertArticles(articles);
 
-      final result = await contentService.getArticles('cong-nghe');
+      // refreshUrl with invalid API will timeout then fallback to cache
+      // Use very short timeout Dio to make test fast
+      final fastDio = Dio(BaseOptions(
+        connectTimeout: const Duration(milliseconds: 100),
+        receiveTimeout: const Duration(milliseconds: 100),
+      ));
+      final fastService = ContentService(
+        cacheService: cacheService,
+        dio: fastDio,
+      );
 
-      // Returns stale cache
+      final result = await fastService.refreshUrl(
+        'https://soha.vn/custom.htm',
+        'custom-cat',
+      );
+
       expect(result.length, 1);
-      // Background crawl fails silently
-      await Future.delayed(const Duration(milliseconds: 10));
-      expect(mockSohaCrawler.crawlCalled, true);
+      expect(result[0].title, 'Cached Article');
+    });
+  });
+
+  group('getDiagnostic', () {
+    test('returns null initially', () {
+      expect(contentService.getDiagnostic('any-category'), isNull);
     });
   });
 }

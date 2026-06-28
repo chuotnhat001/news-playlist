@@ -1,74 +1,64 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+
 import '../models/article.dart';
 import '../models/category_config.dart';
 import 'cache_service.dart';
-import 'crawler_service.dart';
 
 class ContentService {
   final CacheService _cacheService;
-  final Map<String, CrawlerService> _crawlerServices;
+  final Dio _dio;
+
+  static const _supabaseUrl = 'https://zkzpdsijcpnrzczmlpfk.supabase.co';
+  static const _anonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprenBkc2lqY3Bucnpjem1scGZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjI3NDMsImV4cCI6MjA5ODEzODc0M30.N87qUI5DRbjHfMkczOA0ZAn9iOFI3khuyfyudTlLTtc';
 
   final _refreshController = StreamController<String>.broadcast();
   Stream<String> get onBackgroundRefresh => _refreshController.stream;
 
-  /// Last crawl diagnostic per category — for UI display when articles empty
-  final Map<String, String> _lastCrawlDiagnostic = {};
-  String? getDiagnostic(String categoryId) => _lastCrawlDiagnostic[categoryId];
-
-  static const categoryUrls = {
-    'cong-nghe': {
-      'dantri': 'https://dantri.com.vn/suc-manh-so.htm',
-      'soha': 'https://soha.vn/cong-nghe.htm',
-    },
-    'kinh-doanh': {
-      'dantri': 'https://dantri.com.vn/kinh-doanh.htm',
-      'soha': 'https://soha.vn/kinh-doanh.htm',
-    },
-    'chung-khoan': {
-      'dantri': 'https://dantri.com.vn/kinh-doanh/chung-khoan.htm',
-      'soha': 'https://soha.vn/kinh-doanh.htm',
-    },
-  };
+  String? _lastDiagnostic;
+  String? getDiagnostic(String categoryId) => _lastDiagnostic;
 
   ContentService({
     required CacheService cacheService,
-    required Map<String, CrawlerService> crawlerServices,
+    required Dio dio,
   })  : _cacheService = cacheService,
-        _crawlerServices = crawlerServices;
+        _dio = dio;
 
   Future<void> init() async {
     await _cacheService.init();
     await _cacheService.clearExpired();
-    await _seedDefaultCategories();
   }
 
-  static const defaultCategories = [
-    CategoryConfig(
-      id: 'soha_quoc-te',
-      name: 'Quốc Tế',
-      url: 'https://soha.vn/quoc-te.htm',
-      source: 'soha',
-    ),
-    CategoryConfig(
-      id: 'dantri_the-gioi',
-      name: 'Thế Giới',
-      url: 'https://dantri.com.vn/the-gioi.htm',
-      source: 'dantri',
-    ),
-  ];
+  Map<String, String> get _headers => {
+        'Authorization': 'Bearer $_anonKey',
+        'apikey': _anonKey,
+      };
 
-  Future<void> _seedDefaultCategories() async {
-    final existing = await _cacheService.getCategories();
-    if (existing.isNotEmpty) return;
-    for (final cat in defaultCategories) {
-      await _cacheService.insertCategory(cat);
-    }
-  }
-
-  // Custom categories CRUD
   Future<List<CategoryConfig>> getCustomCategories() async {
-    return _cacheService.getCategories();
+    try {
+      final response = await _dio.get<List<dynamic>>(
+        '$_supabaseUrl/functions/v1/refresh',
+        options: Options(headers: _headers),
+      );
+      final data = response.data ?? [];
+      final categories = data.map((json) {
+        return CategoryConfig(
+          id: json['id'] as String,
+          name: json['name'] as String,
+          url: json['url'] as String,
+          source: json['source'] as String,
+        );
+      }).toList();
+
+      for (final cat in categories) {
+        await _cacheService.insertCategory(cat);
+      }
+      return categories;
+    } catch (_) {
+      return _cacheService.getCategories();
+    }
   }
 
   Future<void> addCategory(CategoryConfig category) async {
@@ -83,120 +73,73 @@ class ContentService {
     return _cacheService.getArticleCount(categoryId);
   }
 
-  Future<List<Article>> getArticles(String category) =>
-      _fetchWithFallback(categoryId: category, crawl: () => _crawlAndCache(category));
+  Future<List<Article>> getArticles(String categoryId) async {
+    return _getArticlesFromApi(categoryId);
+  }
 
-  Future<List<Article>> getArticlesFromUrl(String url, String categoryId) =>
-      _fetchWithFallback(categoryId: categoryId, crawl: () => _crawlUrlAndCache(url, categoryId));
+  Future<List<Article>> getArticlesFromUrl(String url, String categoryId) async {
+    return _getArticlesFromApi(categoryId);
+  }
 
-  Future<List<Article>> refreshCategory(String category) =>
-      _fetchWithFallback(categoryId: category, crawl: () => _crawlAndCache(category), forceRefresh: true);
+  Future<List<Article>> refreshCategory(String categoryId) async {
+    return _getArticlesFromApi(categoryId, forceRefresh: true);
+  }
 
-  Future<List<Article>> refreshUrl(String url, String categoryId) =>
-      _fetchWithFallback(categoryId: categoryId, crawl: () => _crawlUrlAndCache(url, categoryId), forceRefresh: true);
+  Future<List<Article>> refreshUrl(String url, String categoryId) async {
+    return _getArticlesFromApi(categoryId, forceRefresh: true);
+  }
 
-  Future<List<Article>> _fetchWithFallback({
-    required String categoryId,
-    required Future<List<Article>> Function() crawl,
+  Future<List<Article>> _getArticlesFromApi(
+    String categoryId, {
     bool forceRefresh = false,
   }) async {
-    if (forceRefresh) {
-      try {
-        return await crawl();
-      } catch (_) {
+    if (!forceRefresh) {
+      final stale = await _cacheService.isStale(categoryId);
+      if (!stale) {
+        final cached = await _cacheService.getArticlesByCategory(categoryId);
+        if (cached.isNotEmpty) return cached;
+      }
+    }
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '$_supabaseUrl/functions/v1/refresh',
+        queryParameters: {'category_id': categoryId},
+        options: Options(headers: _headers),
+      );
+      final data = response.data;
+      if (data == null) {
+        _lastDiagnostic = 'Không nhận được dữ liệu từ server';
+        return [];
+      }
+
+      final articlesJson = data['articles'] as List<dynamic>? ?? [];
+      if (articlesJson.isEmpty) {
+        _lastDiagnostic = 'Server không có bài viết nào cho danh mục này.\nHãy đợi hệ thống cập nhật (mỗi 30 phút).';
         return _cacheService.getArticlesByCategory(categoryId);
       }
-    }
 
-    final stale = await _cacheService.isStale(categoryId);
-    if (!stale) {
+      _lastDiagnostic = null;
+      final articles = articlesJson.map((json) {
+        return Article(
+          id: json['id'] as String,
+          title: json['title'] as String,
+          source: json['source'] as String,
+          audioUrl: json['audio_url'] as String,
+          articleUrl: json['article_url'] as String,
+          category: categoryId,
+          publishedAt: DateTime.parse(json['published_at'] as String),
+          cachedAt: DateTime.now(),
+        );
+      }).toList();
+
+      await _cacheService.insertArticles(articles);
+      _refreshController.add(categoryId);
+      return articles;
+    } catch (e) {
+      _lastDiagnostic = 'Lỗi kết nối server: $e';
       return _cacheService.getArticlesByCategory(categoryId);
     }
-
-    // Stale-while-revalidate: return cached data immediately, crawl in background
-    final cached = await _cacheService.getArticlesByCategory(categoryId);
-    if (cached.isNotEmpty) {
-      // Fire and forget background refresh, notify listeners on completion
-      crawl().then((_) {
-        _refreshController.add(categoryId);
-      }).catchError((_) {});
-      return cached;
-    }
-
-    // No cache at all — must crawl synchronously
-    try {
-      return await crawl();
-    } catch (_) {
-      return [];
-    }
-  }
-
-  Future<List<Article>> _crawlUrlAndCache(String url, String categoryId) async {
-    final uri = Uri.parse(url);
-    final host = uri.host;
-
-    CrawlerService? crawler;
-    if (host.contains('soha.vn')) {
-      crawler = _crawlerServices['soha'];
-    } else if (host.contains('dantri.com.vn')) {
-      crawler = _crawlerServices['dantri'];
-    }
-    if (crawler == null) {
-      _lastCrawlDiagnostic[categoryId] = 'Không hỗ trợ nguồn: $host';
-      return [];
-    }
-
-    final result = await crawler.crawlCategory(url, categoryId);
-    if (result.articles.isEmpty) {
-      final diag = StringBuffer();
-      if (result.totalArticlesFound == 0) {
-        diag.write('Không tìm thấy bài viết nào trên trang.');
-      } else {
-        diag.write('Đã quét ${result.totalArticlesFound} bài viết.');
-        if (result.noAudioCount > 0) {
-          diag.write('\n${result.noAudioCount} bài không có audio.');
-        }
-        if (result.invalidUrlCount > 0) {
-          diag.write('\n${result.invalidUrlCount} bài có URL không hợp lệ.');
-        }
-      }
-      if (result.errors.isNotEmpty) {
-        diag.write('\n\nLỗi: ${result.errors.first}');
-      }
-      _lastCrawlDiagnostic[categoryId] = diag.toString();
-    } else {
-      _lastCrawlDiagnostic.remove(categoryId);
-    }
-
-    if (result.articles.isNotEmpty) {
-      await _cacheService.insertArticles(result.articles);
-    }
-
-    final articles = result.articles.toList();
-    articles.sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
-    return articles;
-  }
-
-  Future<List<Article>> _crawlAndCache(String category) async {
-    final urls = categoryUrls[category];
-    if (urls == null) return [];
-
-    final futures = <Future<CrawlResult>>[];
-    for (final entry in _crawlerServices.entries) {
-      final listingUrl = urls[entry.key];
-      if (listingUrl == null) continue;
-      futures.add(entry.value.crawlCategory(listingUrl, category));
-    }
-
-    final results = await Future.wait(futures);
-    final allArticles = results.expand((r) => r.articles).toList();
-
-    if (allArticles.isNotEmpty) {
-      await _cacheService.insertArticles(allArticles);
-    }
-
-    allArticles.sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
-    return allArticles;
   }
 
   void dispose() {
