@@ -42,7 +42,6 @@ void main() {
   testWidgets('CategoryCard swipe left reveals Reload and Delete actions',
       (tester) async {
     bool reloaded = false;
-    bool deleted = false;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -51,7 +50,7 @@ void main() {
             category: 'cong-nghe',
             onTap: () {},
             onReload: () => reloaded = true,
-            onDelete: () => deleted = true,
+            onDelete: () {},
           ),
         ),
       ),
