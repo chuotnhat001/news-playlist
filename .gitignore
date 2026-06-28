@@ -50,6 +50,9 @@ android/keystore/
 *.jks
 *.keystore
 
+# Environment
+.env
+
 # Firebase
 google-services.json
 GoogleService-Info.plist
