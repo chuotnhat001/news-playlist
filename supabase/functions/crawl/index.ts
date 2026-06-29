@@ -12,7 +12,7 @@ import {
 import { Category, CrawlResult, CrawledArticle } from "../_shared/types.ts";
 
 const CRAWL_DELAY_MS = 300;
-const MAX_ARTICLES = 8;
+const MAX_ARTICLES = 15;
 
 async function crawlCategory(category: Category): Promise<CrawlResult> {
   validateCrawlUrl(category.url);

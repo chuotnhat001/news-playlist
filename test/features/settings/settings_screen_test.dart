@@ -11,7 +11,7 @@ import 'package:news_playlist/services/content_service.dart';
 
 import 'package:news_playlist/providers/content_provider.dart';
 
-class FakeCacheService extends CacheService {
+class FakeCacheService implements CacheService {
   List<CategoryConfig> categories = [];
 
   @override
@@ -22,6 +22,9 @@ class FakeCacheService extends CacheService {
 
   @override
   Future<void> clearExpired() async {}
+
+  @override
+  Future<void> clearAll() async {}
 
   @override
   Future<List<CategoryConfig>> getCategories() async => categories;
@@ -44,6 +47,24 @@ class FakeCacheService extends CacheService {
 
   @override
   Future<List<Article>> getArticlesByCategory(String category) async => [];
+
+  @override
+  Future<void> insertArticles(List<Article> articles) async {}
+
+  @override
+  Future<void> savePlaybackState({
+    required String category,
+    String? categoryUrl,
+    required int articleIndex,
+    String? articleId,
+    required int positionMs,
+  }) async {}
+
+  @override
+  Future<Map<String, dynamic>?> getPlaybackState() async => null;
+
+  @override
+  Future<void> clearPlaybackState() async {}
 }
 
 void main() {

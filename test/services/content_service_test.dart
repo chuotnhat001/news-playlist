@@ -2,12 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:news_playlist/models/article.dart';
 import 'package:news_playlist/models/category_config.dart';
-import 'package:news_playlist/services/cache_service.dart';
+import 'package:news_playlist/services/cache_service_native.dart';
 import 'package:news_playlist/services/content_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  late CacheService cacheService;
+  late CacheServiceNative cacheService;
   late ContentService contentService;
 
   setUpAll(() {
@@ -16,7 +16,7 @@ void main() {
   });
 
   setUp(() async {
-    cacheService = CacheService();
+    cacheService = CacheServiceNative();
     await cacheService.init();
     await cacheService.clearAll();
     await cacheService.clearPlaybackState();
@@ -34,7 +34,7 @@ void main() {
 
   group('init', () {
     test('calls cacheService init and clearExpired', () async {
-      final cache = CacheService();
+      final cache = CacheServiceNative();
       final dio = Dio();
       final service = ContentService(cacheService: cache, dio: dio);
       await service.init();

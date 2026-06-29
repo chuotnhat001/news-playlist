@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:news_playlist/models/article.dart';
-import 'package:news_playlist/services/cache_service.dart';
+import 'package:news_playlist/services/cache_service_native.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  late CacheService cacheService;
+  late CacheServiceNative cacheService;
 
   setUpAll(() {
     sqfliteFfiInit();
@@ -12,7 +12,7 @@ void main() {
   });
 
   setUp(() async {
-    cacheService = CacheService();
+    cacheService = CacheServiceNative();
     final db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
     await cacheService.initWithDatabase(db);
     await cacheService.clearAll();
