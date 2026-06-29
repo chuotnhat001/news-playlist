@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:news_playlist/models/article.dart';
@@ -15,7 +16,7 @@ final contentServiceProvider = Provider<ContentService>((ref) {
     connectTimeout: const Duration(seconds: 15),
     receiveTimeout: const Duration(seconds: 30),
     headers: {
-      'User-Agent': 'NewsPlaylist/1.0',
+      if (!kIsWeb) 'User-Agent': 'NewsPlaylist/1.0',
     },
   ));
 
