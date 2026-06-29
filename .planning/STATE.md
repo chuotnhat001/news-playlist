@@ -1,12 +1,30 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
+stopped_at: context exhaustion at 100% (2026-06-29)
+last_updated: "2026-06-29T01:47:56.300Z"
+progress:
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 8
+  completed_plans: 0
+  percent: 0
+---
+
 # Project State
 
 ## Current Phase
+
 Phase 4: Public Launch (Post-MVP)
 
 ## Current Status
+
 READY_TO_START
 
 ## Completed Phases
+
 - Phase 0: Spike & Validation (2026-06-20)
 - Phase 1: Project Foundation (2026-06-20)
 - Phase 2: UI & User Experience (2026-06-20)
@@ -14,6 +32,7 @@ READY_TO_START
 - Eng Review Implementation (2026-06-23)
 
 ## Post-Phase Fixes Applied
+
 - Fix critical initialization: ensureInitialized, ContentService.init, AudioHandler wiring
 - Dart Isolate for HTML parsing (compute()) — no UI jank
 - audio_service integration for lock screen controls + media notification
@@ -25,6 +44,7 @@ READY_TO_START
 - Widget tests expanded: 55 → 65 → 109 tests
 
 ## Eng Review Tasks (2026-06-23)
+
 - [x] AudioHandler wiring — lock screen controls now functional
 - [x] Resume Session — SQLite persistence, "Tiep tuc nghe" card on Home
 - [x] Stale-while-revalidate — cached data shown instantly, background crawl
@@ -37,6 +57,7 @@ READY_TO_START
 - [x] Test gaps — categories CRUD, playback state, buffering UI, settings screen, audio lifecycle
 
 ## Review Fixes (2026-06-23)
+
 - [x] P0: seekWhenReady — wait for audio source ready before seeking on resume
 - [x] P0: Double-tap prevention — clear state immediately on resume tap
 - [x] P1: Error state preservation — copyWith preserves error across updates
@@ -45,6 +66,7 @@ READY_TO_START
 - [x] P3: StreamController dispose — ContentService.dispose() + ref.onDispose
 
 ## Decisions Log
+
 | Date | Decision | Context |
 |------|----------|---------|
 | 2026-06-20 | Flutter (not React Native, not PWA) | Best native experience for driving use case |
@@ -64,6 +86,7 @@ READY_TO_START
 | 2026-06-23 | Save article index (not ID) for resume | Simple for MVP, noted as P2 improvement |
 
 ## Blockers
+
 - [x] Spike: crawl feasibility — DONE (Soha feasible, Dan Tri no audio)
 - [x] Critical initialization — FIXED (c2a44ee, 1a29c21)
 - [x] Lock screen controls — FIXED (e199c10)
@@ -74,11 +97,13 @@ READY_TO_START
 - [ ] Shorebird account init
 
 ## Test Status
+
 - 109 tests passing
 - Zero flutter analyze errors
 - Coverage: models, services, providers, home screen, player, playlist, settings, audio lifecycle, buffering
 
 ## Git History
+
 - e199c10 feat: implement 10 eng review tasks + gap fixes + review fixes
 - 1471a72 fix: use FlutterFragmentActivity for audio_service compatibility
 - 3a1def0 fix: resolve Gradle build errors (JVM target, shrinkResources)
@@ -92,6 +117,7 @@ READY_TO_START
 - d39a09d feat: implement Phase 0-2 — spike validation, foundation, and UI
 
 ## Session Continuity
-Last session: 2026-06-23
-Stopped at: All eng review tasks implemented, reviewed, and committed. Next: manual setup (icon, keystore, Firebase) then Phase 4 (store submission)
-Resume file: none
+
+Last session: 2026-06-29T01:47:56.293Z
+Stopped at: context exhaustion at 100% (2026-06-29)
+Resume file: None
