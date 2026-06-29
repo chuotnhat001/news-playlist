@@ -6,7 +6,7 @@ import 'package:news_playlist/services/cache_service.dart';
 import 'package:news_playlist/services/content_service.dart';
 
 final cacheServiceProvider = Provider<CacheService>((ref) {
-  return CacheService();
+  return createCacheService();
 });
 
 final contentServiceProvider = Provider<ContentService>((ref) {
