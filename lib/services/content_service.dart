@@ -26,6 +26,8 @@ class ContentService {
   final _refreshController = StreamController<String>.broadcast();
   Stream<String> get onBackgroundRefresh => _refreshController.stream;
 
+  final Map<String, int> _articleCounts = {};
+
   String? _lastDiagnostic;
   String? getDiagnostic(String categoryId) => _lastDiagnostic;
 
@@ -53,8 +55,11 @@ class ContentService {
       );
       final data = response.data ?? [];
       final categories = data.map((json) {
+        final id = json['id'] as String;
+        final count = json['article_count'] as int? ?? 0;
+        _articleCounts[id] = count;
         return CategoryConfig(
-          id: json['id'] as String,
+          id: id,
           name: json['name'] as String,
           url: json['url'] as String,
           source: json['source'] as String,
@@ -79,7 +84,9 @@ class ContentService {
   }
 
   Future<int> getArticleCount(String categoryId) async {
-    return _cacheService.getArticleCount(categoryId);
+    final cached = await _cacheService.getArticleCount(categoryId);
+    if (cached > 0) return cached;
+    return _articleCounts[categoryId] ?? 0;
   }
 
   Future<List<Article>> getArticles(String categoryId) async {

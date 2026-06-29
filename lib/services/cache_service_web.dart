@@ -3,6 +3,10 @@ import 'package:news_playlist/models/category_config.dart';
 import 'cache_service_interface.dart';
 
 class CacheServiceWeb implements CacheServiceBase {
+  final Map<String, CategoryConfig> _categories = {};
+  final Map<String, List<Article>> _articles = {};
+  Map<String, dynamic>? _playbackState;
+
   @override
   bool get isReady => true;
 
@@ -10,10 +14,16 @@ class CacheServiceWeb implements CacheServiceBase {
   Future<void> init() async {}
 
   @override
-  Future<void> insertArticles(List<Article> articles) async {}
+  Future<void> insertArticles(List<Article> articles) async {
+    if (articles.isEmpty) return;
+    final categoryId = articles.first.category;
+    _articles[categoryId] = List.from(articles);
+  }
 
   @override
-  Future<List<Article>> getArticlesByCategory(String category) async => [];
+  Future<List<Article>> getArticlesByCategory(String category) async {
+    return _articles[category] ?? [];
+  }
 
   @override
   Future<bool> isStale(String category) async => true;
@@ -22,19 +32,32 @@ class CacheServiceWeb implements CacheServiceBase {
   Future<void> clearExpired() async {}
 
   @override
-  Future<void> clearAll() async {}
+  Future<void> clearAll() async {
+    _categories.clear();
+    _articles.clear();
+    _playbackState = null;
+  }
 
   @override
-  Future<void> insertCategory(CategoryConfig category) async {}
+  Future<void> insertCategory(CategoryConfig category) async {
+    _categories[category.id] = category;
+  }
 
   @override
-  Future<void> deleteCategory(String id) async {}
+  Future<void> deleteCategory(String id) async {
+    _categories.remove(id);
+    _articles.remove(id);
+  }
 
   @override
-  Future<List<CategoryConfig>> getCategories() async => [];
+  Future<List<CategoryConfig>> getCategories() async {
+    return _categories.values.toList();
+  }
 
   @override
-  Future<int> getArticleCount(String categoryId) async => 0;
+  Future<int> getArticleCount(String categoryId) async {
+    return _articles[categoryId]?.length ?? 0;
+  }
 
   @override
   Future<void> savePlaybackState({
@@ -43,13 +66,23 @@ class CacheServiceWeb implements CacheServiceBase {
     required int articleIndex,
     String? articleId,
     required int positionMs,
-  }) async {}
+  }) async {
+    _playbackState = {
+      'category': category,
+      'category_url': categoryUrl,
+      'article_index': articleIndex,
+      'article_id': articleId,
+      'position_ms': positionMs,
+    };
+  }
 
   @override
-  Future<Map<String, dynamic>?> getPlaybackState() async => null;
+  Future<Map<String, dynamic>?> getPlaybackState() async => _playbackState;
 
   @override
-  Future<void> clearPlaybackState() async {}
+  Future<void> clearPlaybackState() async {
+    _playbackState = null;
+  }
 }
 
 CacheServiceBase createCacheService() => CacheServiceWeb();
